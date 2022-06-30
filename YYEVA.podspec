@@ -16,26 +16,19 @@ Pod::Spec.new do |s|
                    YYEVA 可以在 iOS / Android / Web  实现高性能的动画播放。
                    DESC
 
-  s.homepage         = 'https://github.com/YY-LIVE/YYEVA-IOS'
-  # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
+  s.homepage         = 'https://github.com/yylive/YYEVA-iOS'
+
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'guoyabin' => 'guoyabin2@yy.com' }
-  s.source           = { :git => 'https://github.com/YY-LIVE/YYEVA-iOS.git', :tag => s.version.to_s }
-  # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
+  s.source           = { :git => 'https://github.com/yylive/YYEVA-iOS.git', :tag => s.version.to_s }
+
 
   s.ios.deployment_target = '9.0'
 
   s.source_files = 'YYEVA/Classes/**/*'
-  
-  # s.resource_bundles = {
-  #   'YYEVA' => ['YYEVA/Assets/*.png']
-  # }
+   
   
   s.resource_bundles = {
      'YYEVABundle' => ['YYEVA/**/*.metal']
-   }
-
-  # s.public_header_files = 'Pod/Classes/**/*.h'
-  # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+   } 
 end
