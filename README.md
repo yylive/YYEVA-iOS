@@ -21,7 +21,7 @@
 
 ```js
 target 'MyApp' do 
-  pod 'YYEVA' ,'1.0.0' 
+  pod 'YYEVA' ,'1.0.1' 
 end
 ```
 
