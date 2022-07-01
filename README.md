@@ -50,6 +50,9 @@ YYEVAPlayer *player = [[YYEVAPlayer alloc] init];
  
 ## QQ交流群
 ![qqgroup](https://github.com/yylive/YYEVA/blob/master/img/qqgroup.png)
+
+## 鸣谢 
++ 感谢 [vap](https://github.com/Tencent/vap) 优秀的混合渲染方案、项目Render混合部分重用了 vap的方案
  
 
 ## Dev Team
