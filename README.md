@@ -49,7 +49,7 @@ YYEVAPlayer *player = [[YYEVAPlayer alloc] init];
 + setText:forKey 
  
 ## QQ交流群
-![qqgroup](https://github.com/yylive/YYEVA/blob//img/qqgroup.png)
+![qqgroup](https://github.com/yylive/YYEVA/blob/main/img/qqgroup.png)
 
 ## 鸣谢 
 + 感谢 [vap](https://github.com/Tencent/vap) 优秀的混合渲染方案、项目Render混合部分重用了 vap的方案
