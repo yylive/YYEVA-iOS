@@ -23,116 +23,55 @@
     return self;
 }
   
-- (NSDictionary *)demuxEffectJsonWithFilePath:(NSString *)path
+- (NSDictionary *)demuxEffectJsonWithFilePath:(NSString *)file
 {
     //文件路径
-    //计算文件大小
-//    NSFileManager *fileManager = [NSFileManager defaultManager];
-//    NSDictionary *attriDict = [fileManager attributesOfItemAtPath:path error:nil];
-    //获取文件大小
-//    NSString *fileSize = attriDict[NSFileSize];
-    
-    //循环次数
-    int perReadSize = 512; //每次读取512字节
-    
-    NSData *lastReadData = nil;
-    NSData *readData = nil;
-    
-    NSString *matchStart = @"yyeffectmp4json[[";
-    NSString *matchEnd = @"]]yyeffectmp4json";
-    
-    BOOL findStart = false;
-    BOOL findEnd = false;
-    
-    NSInteger hasReadSize = 0;
-    
-    NSMutableString *jsonStr = [NSMutableString string];
-    NSString *result;
-    //创建句柄
-    self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:path];
-    
-    while ((readData = [self.fileHandle readDataOfLength:perReadSize]) != nil) {
+       //计算文件大小
+   //    NSFileManager *fileManager = [NSFileManager defaultManager];
+   //    NSDictionary *attriDict = [fileManager attributesOfItemAtPath:path error:nil];
+       //获取文件大小
+   //    NSString *fileSize = attriDict[NSFileSize];
+       
+       NSTimeInterval timeInterval = [NSDate date].timeIntervalSince1970;
+       AVAsset *asset = [AVAsset assetWithURL:[NSURL fileURLWithPath:file]];
+       NSArray<AVMetadataItem *> *commonMetadata = asset.metadata;
+       bool find = false;
+       NSString *jsonStr = nil;
+       for (AVMetadataItem *item in commonMetadata) {
+           if ([item.value isKindOfClass:NSString.class]) {
+               NSString *value = (NSString *)item.value;
+               if ([value containsString:@"yyeffectmp4json[["]) {
+                   find = true;
+                   jsonStr = value;
+               }
+           }
+       }
+       NSString *matchStart = @"yyeffectmp4json[[";
+       NSString *matchEnd = @"]]yyeffectmp4json";
         
-        NSInteger readSize = readData.length;
-        if (readSize == 0) { //不再读到数据 返回
-            //关闭句柄
-            [self.fileHandle closeFile];
-            NSLog(@"demuix read eof break");
-            break;
-        }
-        
-        NSString *readStr = [[NSString alloc] initWithData:readData encoding:NSASCIIStringEncoding];
-        
-        if (!findStart) {
-            NSString *tempStart = [self findString:matchStart withString:readStr isStart:YES];
-            if (tempStart.length > 0) {
-                [jsonStr appendString:tempStart];
-                findStart = true;
-            } else {
-                NSMutableData *mergeData = [NSMutableData data];
-                [mergeData appendData:lastReadData];
-                [mergeData appendData:readData];
-                readStr = [[NSString alloc] initWithData:mergeData encoding:NSASCIIStringEncoding];
-                tempStart = [self findString:matchStart withString:readStr isStart:YES];
-                if (tempStart.length > 0) {
-                    [jsonStr appendString:tempStart];
-                    findStart = true;
-                }
-            }
-        } else {
-            NSString *tempEnd = [self findString:matchEnd withString:readStr isStart:NO];
-            if (tempEnd.length > 0) {
-                [jsonStr appendString:tempEnd];
-                findEnd = true;
-            } else {
-                if (lastReadData != nil) {
-                    NSMutableData *mergeData = [NSMutableData data];
-                    [mergeData appendData:lastReadData];
-                    [mergeData appendData:readData];
-                    NSString *findStr = [[NSString alloc] initWithData:mergeData encoding:NSASCIIStringEncoding];
-                    tempEnd = [self findString:matchEnd withString:findStr isStart:NO];
-                    if (tempEnd.length > 0) {
-                        [jsonStr appendString:tempEnd];
-                        findEnd = true;
-                    }
-                }
-                
-                if (!findEnd) {
-                    [jsonStr appendString:readStr];
-                }
-            }
-        }
-        
-        
-        hasReadSize += readSize;
-        lastReadData = readData;
-        
-        if (findEnd && findStart) {
-            break;
-        }
-        
-        //设置每次句柄偏移量
-        [self.fileHandle seekToFileOffset:hasReadSize];
-    }
-    
-     
-    if ([jsonStr containsString:matchStart] && [jsonStr containsString:matchEnd]) {
-        NSLog(@"jsonStr:%@",jsonStr);
-         
-        //匹配出中间字符串
-        [jsonStr replaceOccurrencesOfString:matchStart withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, jsonStr.length)];
-        
-        [jsonStr replaceOccurrencesOfString:matchEnd withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, jsonStr.length)];
-        
-        result = (NSString *)jsonStr;
-        
-        NSDictionary *json = [self parseWithBase64:result];
-         
-        NSLog(@"json :%@",json);
-        
-        return json;
-        
-    }
+       
+       
+       if ([jsonStr containsString:matchStart] && [jsonStr containsString:matchEnd]) {
+           NSLog(@"jsonStr:%@",jsonStr);
+           NSMutableString *json = [[NSMutableString alloc] initWithString:jsonStr];
+           //匹配出中间字符串
+           [json replaceOccurrencesOfString:matchStart withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, json.length)];
+           
+           [json replaceOccurrencesOfString:matchEnd withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, json.length)];
+           
+           NSString *result = (NSString *)json;
+           
+           NSDictionary *dict = [self parseWithBase64:result];
+              
+           NSTimeInterval curtimeInterval = [NSDate date].timeIntervalSince1970;
+           
+           NSLog(@"%f,dict : %@",curtimeInterval - timeInterval,dict);
+           
+           return dict;
+           
+       }
+       
+       
     
     
     return nil;

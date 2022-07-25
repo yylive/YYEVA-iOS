@@ -101,8 +101,6 @@
     
     //开始播
     [player play:file];
-    
-;
 }
 
 - (CGRect)playViewFrame
@@ -133,6 +131,10 @@
 {
     [videoPlayer stopAnimation];
     [videoPlayer removeFromSuperview];
+    if (videoPlayer == self.player) {
+        self.player = nil;
+    }
+     
 }
  
 @end
