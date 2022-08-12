@@ -1,5 +1,7 @@
 # YY-EVA <sup>iOS</sup>  
 
+简体中文 | [English](./README_en.md)
+
 > 轻量级 高性能 跨平台 MP4 礼物播放器
 
 ## 介绍
