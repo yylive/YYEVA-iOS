@@ -9,7 +9,8 @@
 #import "YYEVADemuxMedia.h"
 #import "YYEVAEffectInfo.h"
 #import "YSVideoMetalUtils.h"
-   
+#import <AVFoundation/AVFoundation.h>
+
 #define kSampleBufferQueueMaxCapacity 3
 
 @interface YYEVAAssets()
@@ -22,6 +23,7 @@
 @property (nonatomic, assign) NSTimeInterval videoDuration;
 @property (nonatomic, assign) NSTimeInterval frameDuration;
 @property (nonatomic, strong) YYEVADemuxMedia *demuxer;
+@property (nonatomic, strong) AVAudioPlayer *audioPlayer;
 @end
 
 @implementation YYEVAAssets
@@ -142,6 +144,15 @@
         NSLog(@"tracksWithMediaType url:%@ failure",self.filePath);
         return;
     }
+    
+    AVAssetTrack *assetAudioTrack = [[asset tracksWithMediaType:AVMediaTypeAudio] firstObject];
+    if (!assetAudioTrack) {
+        NSLog(@"tracksWithMediaAudioType url:%@ failure",self.filePath);
+        _audioPlayer = nil;
+    } else {
+        self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:self.filePath] error:nil];
+    }
+    
     NSDictionary *outputSettings = @{
         (id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange),
         (id)kCVPixelBufferMetalCompatibilityKey: @(YES),
@@ -230,10 +241,23 @@
     [self clear];
     CFRelease(self->_sampleBufferQueue);
     self->_sampleBufferQueue = NULL;
+    if (self.audioPlayer && [self.audioPlayer isPlaying]) {
+        [self.audioPlayer stop];
+    }
+    self.audioPlayer = nil;
 }
 
 - (NSTimeInterval)totalDuration
 {
     return self.videoDuration;
+}
+
+- (void)tryPlayAudio
+{
+    if (!_audioPlayer) {
+        return;
+    }
+    
+    [_audioPlayer play];
 }
 @end

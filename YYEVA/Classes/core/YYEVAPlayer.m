@@ -103,6 +103,7 @@
         [weakSelf endPlay];
     };
    [self.videoRender playWithAssets:assets];
+   [self.assets tryPlayAudio];
 }
  
 
