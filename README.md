@@ -4,6 +4,10 @@
 
 > 轻量级 高性能 跨平台 MP4 礼物播放器
 
+## 支持本项目
+
+请支持我们的项目，点击 GitHub Star, 让更多的人看到该项目
+
 ## 介绍
 + YYEVAPlayer 是一个轻量的动画渲染库。通过[这里](https://github.com/yylive/YYEVA/blob/main/YYEVA%E8%AE%BE%E8%AE%A1%E8%A7%84%E8%8C%83.md)导出动画文件
 + YYEVA-iOS 使用原生 Metal 库渲染视频，为你提供高性能、低开销的动画体验。
