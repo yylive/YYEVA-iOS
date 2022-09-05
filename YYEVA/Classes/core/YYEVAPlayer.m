@@ -109,7 +109,7 @@
 
 - (void)endPlay
 {
-    [self.assets clear];
+    [self stopAnimation];
     if ([self.delegate respondsToSelector:@selector(evaPlayerDidCompleted:)]) {
         [self.delegate evaPlayerDidCompleted:self];
     }
@@ -134,7 +134,11 @@
     [self pause];
     [self.mtkView removeFromSuperview];
     self.mtkView = nil;
-    [self.assets clear]; 
+    [self.assets clear];
+    self.assets = nil;
+    [self.imgUrlKeys removeAllObjects];
+    [self.textKeys removeAllObjects];
+    self.videoRender = nil;
 }
  
 - (void)pause

@@ -188,6 +188,10 @@
                }
            }
            
+           if (self.reader.status != AVAssetReaderStatusReading) {
+               break;
+           }
+           
            CMSampleBufferRef sampleBufferRef = [self.output copyNextSampleBuffer];
            if (sampleBufferRef) {
                @synchronized (self) {
@@ -233,12 +237,26 @@
 - (void)clear
 {
     [self.reader cancelReading];
+    NSInteger count = CFArrayGetCount(self->_sampleBufferQueue);
+    if (count > 0) {
+        for (NSInteger i = 0; i < count; i++) {
+            CMSampleBufferRef ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, i
+                                                                              );
+            if (ref) {
+                CMSampleBufferInvalidate(ref);
+                CFRelease(ref);
+                ref = NULL;
+            }
+        }
+    }
     CFArrayRemoveAllValues(self->_sampleBufferQueue);
 }
 
 - (void)dealloc
 {
     [self clear];
+    NSLog(@"-%@--%zd---", self,CFArrayGetCount(self->_sampleBufferQueue));
+    
     CFRelease(self->_sampleBufferQueue);
     self->_sampleBufferQueue = NULL;
     if (self.audioPlayer && [self.audioPlayer isPlaying]) {
