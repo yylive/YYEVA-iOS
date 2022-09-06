@@ -13,6 +13,9 @@ extern matrix_float3x3 kColorConversion601FullRangeMatrix;
 extern vector_float3 kColorConversion601FullRangeOffset;
 
 @interface YYEVAVideoAlphaRender()
+{
+    float _imageVertices[8];
+}
 @property (nonatomic, weak) MTKView *mtkView;
 @property (nonatomic, strong) id<MTLDevice> device;
 @property (nonatomic, strong) id<MTLRenderPipelineState> renderPipelineState;
@@ -28,6 +31,9 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 @implementation YYEVAVideoAlphaRender
 @synthesize completionPlayBlock;
 @synthesize playAssets;
+@synthesize inputSize = _inputSize;
+@synthesize fillMode = _fillMode;
+
 
 - (void)dealloc
 {
@@ -42,6 +48,17 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     return self;
 }
 
+- (void)setFillMode:(YYEVAFillMode)fillMode
+{
+    _fillMode = fillMode;
+    [self setupVertex];
+}
+
+- (void)setInputSize:(CGSize)inputSize
+{
+    _inputSize = inputSize;
+    [self setupVertex];
+}
 
 - (void)playWithAssets:(YYEVAAssets *)assets
 {
@@ -84,19 +101,54 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     _commandQueue = [_device newCommandQueue];
 }
 
+- (void)recalculateViewGeometry
+{
+    float heightScaling = 1.0;
+    float widthScaling = 1.0;
+    CGSize drawableSize = self.mtkView.bounds.size;
+    CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
+    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(self.inputSize, bounds);
+    switch (self.fillMode) {
+        case YYEVAContentMode_ScaleToFill:
+            heightScaling = 1.0;
+            widthScaling = 1.0;
+            break;
+            
+        case YYEVAContentMode_ScaleAspectFit:
+            widthScaling = insetRect.size.width / drawableSize.width;
+            heightScaling = insetRect.size.height / drawableSize.height;
+            break;
+            
+        case YYEVAContentMode_ScaleAspectFill:
+            widthScaling = drawableSize.height / insetRect.size.height;
+            heightScaling = drawableSize.width / insetRect.size.width;
+            break;
+    }
+    self->_imageVertices[0] = -widthScaling;
+    self->_imageVertices[1] = -heightScaling;
+    self->_imageVertices[2] = -widthScaling;
+    self->_imageVertices[3] = heightScaling;
+    self->_imageVertices[4] = widthScaling;
+    self->_imageVertices[5] = -heightScaling;
+    self->_imageVertices[6] = widthScaling;
+    self->_imageVertices[7] = heightScaling;
+    
+}
+
+
 
 // 设置顶点
 - (void)setupVertex {
+     
     
-    //1.顶点坐标(x,y,z);纹理坐标(x,y)
-    //注意: 为了让视频全屏铺满,所以顶点大小均设置[-1,1]
-    static const YSVideoMetalVertex quadVertices[] =
+    [self recalculateViewGeometry];
+    
+    YSVideoMetalVertex quadVertices[] =
     {   // 顶点坐标，分别是x、y、z；    纹理坐标，x、y；
-        { { -1.0, -1.0, 0.0 ,1.0},  { 0.f, 1.f} },
-        { { -1.0,  1.0, 0.0 ,1.0},  { 0.f, 0.0f } },
-        { {  1.0, -1.0, 0.0,1.0 },  { 1.f, 1.f } },
-        { {  1.0, 1.0, 0.0,1.0 },  { 1.f, 0.f } }
-         
+        { { self->_imageVertices[0], self->_imageVertices[1], 0.0 ,1.0},  { 0.f, 1.f} },
+        { { self->_imageVertices[2],  self->_imageVertices[3], 0.0 ,1.0},  { 0.f, 0.0f } },
+        { { self->_imageVertices[4], self->_imageVertices[5], 0.0,1.0 },  { 1.f, 1.f } },
+        { { self->_imageVertices[6], self->_imageVertices[7], 0.0,1.0 },  { 1.f, 0.f } }
     };
     
     //2.创建顶点缓存区
@@ -125,6 +177,8 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 - (void)mtkView:(MTKView *)view drawableSizeWillChange:(CGSize)size
 {
     self.viewportSize = (vector_uint2){size.width, size.height};
+    
+    [self setupVertex];
 }
 
 //视图绘制

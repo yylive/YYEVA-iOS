@@ -23,12 +23,12 @@
 @end
 
 @implementation YYEVAPlayer
-
-
+ 
 - (instancetype)init
 {
     if (self = [super init]) {
         self.backgroundColor = [UIColor clearColor];
+        self.mode = YYEVAContentMode_ScaleAspectFit;
     }
     return self;
 }
@@ -90,11 +90,11 @@
     } else {
         self.videoRender = [[YYEVAVideoAlphaRender alloc] initWithMetalView:self.mtkView];
     }
+   self.videoRender.fillMode = self.mode;
+   self.videoRender.inputSize = self.assets.rgbSize;
    self.mtkView.delegate = self.videoRender;
    self.mtkView.frame = self.bounds;
    self.mtkView.backgroundColor = [UIColor clearColor];
-   //UIViewContentModeScaleAspectFill
-   self.mtkView.contentMode = UIViewContentModeScaleAspectFit;
    self.mtkView.preferredFramesPerSecond = assets.preferredFramesPerSecond ;
 
     __weak typeof(self) weakSelf = self;

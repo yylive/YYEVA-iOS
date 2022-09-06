@@ -6,7 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
-
+#import "YYEVACommon.h"
  
 NS_ASSUME_NONNULL_BEGIN
 
@@ -22,6 +22,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)playWithAssets:(YYEVAAssets *)assets;
 - (instancetype)initWithMetalView:(MTKView *)mtkView;
+
+@property (nonatomic, assign) YYEVAFillMode fillMode;
+
+@property (nonatomic, assign) CGSize inputSize;
  
 @end
 

@@ -6,12 +6,14 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "YYEVACommon.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class YYEVAPlayer;
- 
 
+
+@class YYEVAPlayer;
+  
 @protocol IYYEVAPlayerDelegate <NSObject>
 
 @optional 
@@ -22,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface YYEVAPlayer : UIView
  
 @property (nonatomic, assign) id<IYYEVAPlayerDelegate> delegate;
+
+@property (nonatomic, assign) YYEVAFillMode mode;
 
 //播放
 - (void)play:(NSString *)fileUrl;

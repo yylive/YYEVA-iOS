@@ -14,7 +14,10 @@
 extern matrix_float3x3 kColorConversion601FullRangeMatrix;
 extern vector_float3 kColorConversion601FullRangeOffset;
 
-@interface YYEVAVideoEffectRender()
+@interface YYEVAVideoEffectRender() 
+{
+    float _imageVertices[8];
+}
 @property (nonatomic, weak) MTKView *mtkView;
 @property (nonatomic, strong) id<MTLDevice> device;
 @property (nonatomic, strong) id<MTLRenderPipelineState> defaultRenderPipelineState;
@@ -30,7 +33,9 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 
 @implementation YYEVAVideoEffectRender
 @synthesize completionPlayBlock;
-@synthesize playAssets;
+@synthesize playAssets; 
+@synthesize inputSize = _inputSize;
+@synthesize fillMode = _fillMode;
 
 - (instancetype)initWithMetalView:(MTKView *)mtkView
 {
@@ -43,6 +48,19 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 - (void)dealloc
 {
     CFRelease(_textureCache);
+}
+
+
+- (void)setFillMode:(YYEVAFillMode)fillMode
+{
+    _fillMode = fillMode;
+    [self setupVertex];
+}
+
+- (void)setInputSize:(CGSize)inputSize
+{
+    _inputSize = inputSize;
+    [self setupVertex];
 }
 
 
@@ -68,18 +86,64 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     return filePath;
 }
 
+
+- (void)recalculateViewGeometry
+{
+    float heightScaling = 1.0;
+    float widthScaling = 1.0;
+    CGSize drawableSize = self.mtkView.bounds.size;
+    CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
+    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(self.inputSize, bounds);
+    switch (self.fillMode) {
+        case YYEVAContentMode_ScaleToFill:
+            heightScaling = 1.0;
+            widthScaling = 1.0;
+            break;
+            
+        case YYEVAContentMode_ScaleAspectFit:
+            widthScaling = insetRect.size.width / drawableSize.width;
+            heightScaling = insetRect.size.height / drawableSize.height;
+            break;
+            
+        case YYEVAContentMode_ScaleAspectFill:
+            widthScaling = drawableSize.height / insetRect.size.height;
+            heightScaling = drawableSize.width / insetRect.size.width;
+            break;
+    }
+    self->_imageVertices[0] = -widthScaling;
+    self->_imageVertices[1] = -heightScaling;
+    self->_imageVertices[2] = -widthScaling;
+    self->_imageVertices[3] = heightScaling;
+    self->_imageVertices[4] = widthScaling;
+    self->_imageVertices[5] = -heightScaling;
+    self->_imageVertices[6] = widthScaling;
+    self->_imageVertices[7] = heightScaling;
+}
+
+
+
  
 // 设置顶点
 - (void)setupVertex
 {
+    [self recalculateViewGeometry];
+      
     //需要将assets的描述信息来构建顶点和纹理数据
     YYEVAEffectInfo *effectInfo = self.playAssets.effectInfo;
      
-    float static kVAPMTLVerticesIdentity[16] = {
-                    -1.0f, -1.0f, 0.0f,1.0f, //顶点1
-                    -1.0f,  1.0f, 0.0f,1.0f,  //顶点2
-                     1.0f, -1.0f, 0.0f,1.0f,  //顶点3
-                     1.0f,  1.0f, 0.0f,1.0f    //顶点4
+//    float static kVAPMTLVerticesIdentity[16] = {
+//                    -1.0f, -1.0f, 0.0f,1.0f, //顶点1
+//                    -1.0f,  1.0f, 0.0f,1.0f,  //顶点2
+//                     1.0f, -1.0f, 0.0f,1.0f,  //顶点3
+//                     1.0f,  1.0f, 0.0f,1.0f    //顶点4
+//    };
+    
+    float kVAPMTLVerticesIdentity[16] =
+    {   // 顶点坐标，分别是x、y、z；    纹理坐标，x、y；
+         self->_imageVertices[0], self->_imageVertices[1], 0.0 ,1.0,
+         self->_imageVertices[2],  self->_imageVertices[3], 0.0 ,1.0,
+         self->_imageVertices[4], self->_imageVertices[5], 0.0,1.0 ,
+         self->_imageVertices[6], self->_imageVertices[7], 0.0,1.0,
     };
      
     const int colunmCountForVertices = 4;
@@ -173,7 +237,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     {
         //设置renderPassDescriptor中颜色附着(默认背景色)
         renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(1.0, 0.0, 0.0, 1.0f);
+        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0f);
         //根据渲染描述信息创建渲染命令编码器
         id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
         //设置视口大小(显示区域)

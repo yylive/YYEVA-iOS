@@ -37,4 +37,11 @@ typedef NS_ENUM(NSUInteger, YYEVAPlayerStatus) {
     YYEVAPlayerStatus_End = 4, // 表示已播到末尾
 };
 
+//MP4资源播放的拉伸模式
+typedef NS_ENUM(NSInteger,YYEVAFillMode){
+    YYEVAContentMode_ScaleToFill = 0,
+    YYEVAContentMode_ScaleAspectFit = 1,
+    YYEVAContentMode_ScaleAspectFill = 2,
+};
+
 NS_ASSUME_NONNULL_END

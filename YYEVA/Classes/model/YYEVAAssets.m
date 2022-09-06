@@ -54,7 +54,6 @@
         _demuxer = [[YYEVADemuxMedia alloc] init];
         //解析fileUrl
         _readVideoBufferQueue = dispatch_queue_create("com.yy.eva.ReadBufferQueue", DISPATCH_QUEUE_SERIAL);
-         
         _sampleBufferQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
     }
     return self;
@@ -125,6 +124,11 @@
         self.size = CGSizeMake(self.effectInfo.videoWidth, self.effectInfo.videoHeight);
     }
     
+    //获取视频的分辨率
+    if (CGSizeEqualToSize(effectInfo.rgbFrame.size, CGSizeZero)) {
+        self.rgbSize = effectInfo.rgbFrame.size;
+    }
+    
     //asset
     AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:[NSURL fileURLWithPath:self.filePath] options:nil];
     
@@ -163,12 +167,20 @@
     [reader startReading];
      
     NSTimeInterval duration = CMTimeGetSeconds(assetTrack.minFrameDuration);
+     
+    
     CMTime videoTotalTime = [asset duration];
     if (videoTotalTime.timescale) {
         _videoDuration = videoTotalTime.value / (videoTotalTime.timescale * 1.0f);
     } else {
         _videoDuration = 0.0f;
     }
+    
+    if (CGSizeEqualToSize(self.rgbSize, CGSizeZero)) {
+        self.rgbSize = CGSizeMake(assetTrack.naturalSize.width / 2, assetTrack.naturalSize.height);
+    }
+     
+    
     _frameDuration = duration;
     _preferredFramesPerSecond = 1 / duration;
     _frameIndex = -1;

@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
  数据源地址
  */
 @property (nonatomic, strong, readonly) NSString *filePath;
-
+@property (nonatomic, assign) CGSize rgbSize;
 @property (nonatomic, strong, readonly) YYEVAEffectInfo *effectInfo; //融合信息
 
 @property (nonatomic, assign, readonly) NSUInteger frameIndex;
