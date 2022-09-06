@@ -18,7 +18,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign,readonly) CGRect outputFrame;
 @property (nonatomic, assign,readonly) NSInteger effect_id;
 @property (nonatomic, assign) YYEVAEffectSource *src;
-- (id<MTLBuffer>)vertexBufferWithContainerSize:(CGSize)size maskContianerSize:(CGSize)mSize device:(id<MTLDevice>)device;
+- (id<MTLBuffer>)vertexBufferWithContainerSize:(CGSize)size
+                             maskContianerSize:(CGSize)mSize
+                                        device:(id<MTLDevice>)device;
+- (id<MTLBuffer>)vertexBufferWithContainerSize:(CGSize)size
+                             maskContianerSize:(CGSize)mSize
+                                        device:(id<MTLDevice>)device
+                                      fillMode:(YYEVAFillMode)fillMode
+                                      trueSize:(CGSize)trueSize;
 @end
 
 @interface YYEVAEffectSource : NSObject

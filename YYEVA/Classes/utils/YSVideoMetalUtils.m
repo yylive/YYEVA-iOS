@@ -5,7 +5,7 @@
 //  Created by guoyabin on 2021/7/15.
 //
 #import "YSVideoMetalUtils.h"
-
+#import <AVFoundation/AVFoundation.h>
 @import MetalKit;
 
 matrix_float3x3 kColorConversion601FullRangeMatrix = (matrix_float3x3){
@@ -45,9 +45,9 @@ void generatorVertices(CGRect rect, CGSize containerSize, float vertices[16]) {
             originX+width,originY-height,0.0, 1.0};
     replaceArrayElements(vertices, tempVertices, 16);
 }
+ 
 
-
-void normalVerticesWithFillMode(CGRect rect, CGSize containerSize, CGSize picSize,YYEVAEffectSourceImageFillMode fillMode, float vertices[16]) {
+void normalVerticesWithFillMode(CGRect rect, CGSize containerSize, CGSize picSize,YYEVAEffectSourceImageFillMode fillMode, float vertices[16],YYEVAFillMode videoFillMode,CGSize trueSize) {
     if (picSize.width > 0 && picSize.height > 0) {
         float picWidth = picSize.width;
         float picHeight = picSize.height;
@@ -80,12 +80,39 @@ void normalVerticesWithFillMode(CGRect rect, CGSize containerSize, CGSize picSiz
        }
     }
     
+    //containerSize
     
+    //trueSize
+    float heightScaling = 1.0;
+    float widthScaling = 1.0;
+    CGSize drawableSize = trueSize;
+    CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
+    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(containerSize, bounds);
+    switch (videoFillMode) {
+        case YYEVAContentMode_ScaleToFill:
+            heightScaling = 1.0;
+            widthScaling = 1.0;
+            break;
+
+        case YYEVAContentMode_ScaleAspectFit:
+            widthScaling = insetRect.size.width / drawableSize.width;
+            heightScaling = insetRect.size.height / drawableSize.height;
+            break;
+
+        case YYEVAContentMode_ScaleAspectFill:
+            widthScaling = drawableSize.height / insetRect.size.height;
+            heightScaling = drawableSize.width / insetRect.size.width;
+            break;
+    }
+     
+//    rect
+//    rect = CGRectMake(rect.origin.x * widthScaling, rect.origin.y * heightScaling, rect.size.width, rect.size.height);
+     
     float originX, originY, width, height;
-    originX = -1+2*rect.origin.x/containerSize.width;
-    originY = 1-2*rect.origin.y/containerSize.height;
-    width = 2*rect.size.width/containerSize.width;
-    height = 2*rect.size.height/containerSize.height;
+    originX = (-1+2*rect.origin.x/containerSize.width) * widthScaling;
+    originY = (1-2*rect.origin.y/containerSize.height) * heightScaling;
+    width = (2*rect.size.width/containerSize.width) * widthScaling;
+    height = (2*rect.size.height/containerSize.height) * heightScaling;
       
     float tempVertices[] = {
             originX, originY,0.0, 1.0,
@@ -102,6 +129,8 @@ void textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coordinate
     originY = rect.origin.y/containerSize.height;
     width = rect.size.width/containerSize.width;
     height = rect.size.height/containerSize.height;
+    
+    
      
     float tempCoordintes[] = {
         originX, originY+height,//0,1

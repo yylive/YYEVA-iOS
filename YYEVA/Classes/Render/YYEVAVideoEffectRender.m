@@ -294,8 +294,10 @@ extern vector_float3 kColorConversion601FullRangeOffset;
             //    vector_float4 positon;  4
             //    vector_float2 sourceTextureCoordinate; 2
             //    vector_float2 maskTextureCoordinate; 2
-            // 」
-            id<MTLBuffer> vertexBuffer = [mergeInfo vertexBufferWithContainerSize:size maskContianerSize:videoSize device:self.device];
+            // 」 
+            id<MTLBuffer> vertexBuffer = [mergeInfo vertexBufferWithContainerSize:size
+                                                                maskContianerSize:videoSize
+                                                                           device:self.device fillMode:self.fillMode trueSize:self.mtkView.bounds.size];
             id<MTLBuffer> colorParamsBuffer = mergeInfo.src.colorParamsBuffer;
             id<MTLBuffer> convertMatrix = self.convertMatrix;
             if (!sourceTexture || !vertexBuffer || !convertMatrix) {

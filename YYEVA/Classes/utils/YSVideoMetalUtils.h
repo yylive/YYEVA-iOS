@@ -12,8 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
   
 #ifdef __cplusplus
 extern "C" {
-#endif
-    extern void normalVerticesWithFillMode(CGRect rect, CGSize containerSize, CGSize picSize,YYEVAEffectSourceImageFillMode fillMode, float vertices[_Nullable 16]);
+#endif 
+    extern void normalVerticesWithFillMode(CGRect rect, CGSize containerSize, CGSize picSize,YYEVAEffectSourceImageFillMode fillMode, float vertices[16],YYEVAFillMode videoFillMode,CGSize trueSize);
     extern void textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coordinates[_Nullable 8]);
     
 #ifdef __cplusplus

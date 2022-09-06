@@ -44,11 +44,12 @@ CGRect getFrame(NSArray *arry)
     }
     return self;
 }
- 
 
 - (id<MTLBuffer>)vertexBufferWithContainerSize:(CGSize)size
                              maskContianerSize:(CGSize)mSize
                                         device:(id<MTLDevice>)device
+                                      fillMode:(YYEVAFillMode)fillMode
+                                      trueSize:(CGSize)trueSize
 {
     if (size.width <= 0 || size.height <= 0 || mSize.width <= 0 || mSize.height <= 0) {
         NSLog(@"--%@ - fail",NSStringFromSelector(_cmd));
@@ -62,7 +63,8 @@ CGRect getFrame(NSArray *arry)
      //4 + 2 + 2 = 8  * 4 = 32
     const int colunmCountForVertices = 4, colunmCountForCoordinate = 2, vertexDataLength = 32;
     float vertices[16], maskCoordinates[8];
-    normalVerticesWithFillMode(self.renderFrame, size, self.src.sourceImage.size,self.src.fillMode,vertices);
+//    normalVerticesWithFillMode(self.renderFrame, size, self.src.sourceImage.size,self.src.fillMode,vertices);
+    normalVerticesWithFillMode(self.renderFrame, size, self.src.sourceImage.size,self.src.fillMode,vertices,fillMode,trueSize);
     textureCoordinateFromRect(self.outputFrame, mSize, maskCoordinates);
     float sourceCoordinates[8] = {
         0.0, 1.0,
@@ -88,7 +90,7 @@ CGRect getFrame(NSArray *arry)
     id<MTLBuffer> vertexBuffer = [device newBufferWithBytes:vertexData length:allocationSize options:MTLResourceStorageModeShared];
     return vertexBuffer;
 }
-
+ 
  
 @end
 

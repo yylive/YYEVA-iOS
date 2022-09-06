@@ -47,7 +47,6 @@
     textField.clearsOnBeginEditing = YES;
     [toolBarView addSubview:textField];
     self.textField = textField;
-     
 }
  
   
@@ -65,11 +64,9 @@
     
     YYEVAPlayer *player = [[YYEVAPlayer alloc] init];
     player.delegate = self;
-    player.backgroundColor = [UIColor clearColor];
     [self.view addSubview:player];
     player.frame = [self playViewFrame];
     [player play:file];
-    
     self.player = player;
 }
 
@@ -105,7 +102,7 @@
 
 - (CGRect)playViewFrame
 {
-    return CGRectMake(0, 150, 380, 422);
+    return CGRectMake(0, 150, 300, 400);
 }
 
 
