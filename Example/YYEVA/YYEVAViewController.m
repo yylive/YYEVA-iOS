@@ -8,7 +8,7 @@
 
 #import "YYEVAViewController.h"
 #import <YYEVA/YYEVA.h>
-
+#import "YYEVAPlayer+HttpURL.h""
 @interface YYEVAViewController () <IYYEVAPlayerDelegate>
 @property (nonatomic, strong) YYEVAPlayer *player;
 @property (nonatomic, strong) UIButton *pauseRenderBtn;
@@ -55,8 +55,14 @@
 {
     [self.textField resignFirstResponder];
      
-    NSString *file = [[NSBundle mainBundle] pathForResource:@"alpha.mp4" ofType:nil];
-     
+//    NSString *file = [[NSBundle mainBundle] pathForResource:@"alpha.mp4" ofType:nil];
+    //Test HTTP
+//    [self playWithFile:file];
+    [self playWithHTTPURL:@"https://lxcode.bs2cdn.yy.com/92d5a19f-4288-41e6-835a-e092880c4af7.mp4"];
+}
+
+- (void)playWithFile:(NSString *)file
+{
     if (self.player) {
         [self.player stopAnimation];
         self.player = nil;
@@ -70,9 +76,25 @@
     self.player = player;
 }
 
+- (void)playWithHTTPURL:(NSString *)url
+{
+    if (self.player) {
+        [self.player stopAnimation];
+        self.player = nil;
+    }
+    
+    YYEVAPlayer *player = [[YYEVAPlayer alloc] init];
+    player.delegate = self;
+    [self.view addSubview:player];
+    player.frame = [self playViewFrame];
+    [player playHttpURL:url];
+    self.player = player;
+}
+
+
 - (void)onClickMaskRenderBtn
 {
-    NSString *file = [[NSBundle mainBundle] pathForResource:@"effect.mp4" ofType:nil];
+    NSString *file = [[NSBundle mainBundle] pathForResource:@"card.mp4" ofType:nil];
     NSString *str = self.textField.text;
     
     if (self.player) {
@@ -80,7 +102,7 @@
         self.player = nil;
     }
     
-    NSString *png1 = [[NSBundle mainBundle] pathForResource:@"ball_1.png" ofType:nil];
+    NSString *png1 = [[NSBundle mainBundle] pathForResource:@"avatar.png" ofType:nil];
     NSString *png2 = [[NSBundle mainBundle] pathForResource:@"ball_2.png" ofType:nil];
     NSString *png3 = [[NSBundle mainBundle] pathForResource:@"ball_3.png" ofType:nil];
      
@@ -91,10 +113,10 @@
     self.player = player;
     
     //配置相关属性
-    [player setImageUrl:png1 forKey:@"anchor_avatar1"];
+    [player setImageUrl:png1 forKey:@"image1"];
     [player setImageUrl:png2 forKey:@"anchor_avatar2"];
     [player setImageUrl:png3 forKey:@"anchor_avatar3"];
-    [player setText:str.length ? str :@"可替换文案" forKey:@"anchor_nick"];
+    [player setText:str.length ? str :@"可替换文案" forKey:@"text1"];
     
     //开始播
     [player play:file];
@@ -102,7 +124,7 @@
 
 - (CGRect)playViewFrame
 {
-    return CGRectMake(0, 150, 300, 400);
+    return CGRectMake(0, 300, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height - 300);
 }
 
 
@@ -131,7 +153,6 @@
     if (videoPlayer == self.player) {
         self.player = nil;
     }
-     
 }
  
 @end

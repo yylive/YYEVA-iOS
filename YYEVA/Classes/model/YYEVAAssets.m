@@ -99,11 +99,11 @@
 }
 
 //metal:texture
-- (void)loadVideo
+- (BOOL)loadVideo
 {
     if (!self.filePath || ![[NSFileManager defaultManager] fileExistsAtPath:self.filePath]) {
         NSLog(@"filepath not exits:%@",self.filePath);
-        return;
+        return NO;
     }
     NSDictionary *dictionary = [self.demuxer demuxEffectJsonWithFilePath:self.filePath];
     
@@ -133,19 +133,19 @@
     
     if (!asset) {
         NSLog(@"load asset url:%@ failure",self.filePath);
-        return;
+        return NO;
     }
     
     AVAssetReader *reader = [AVAssetReader assetReaderWithAsset:asset error:nil];
     
     if (!reader) {
         NSLog(@"assetReaderWithAsset:%@ failure",self.filePath);
-        return;
+        return NO;
     }
     AVAssetTrack *assetTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] firstObject];
     if (!assetTrack) {
         NSLog(@"tracksWithMediaType url:%@ failure",self.filePath);
-        return;
+        return NO;
     }
     
     AVAssetTrack *assetAudioTrack = [[asset tracksWithMediaType:AVMediaTypeAudio] firstObject];
@@ -184,6 +184,8 @@
     _frameIndex = -1;
     _reader = reader;
     _output = output;
+    
+    return YES;
 }
  
 

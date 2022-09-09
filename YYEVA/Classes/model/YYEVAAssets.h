@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype)initWithFilePath:(NSString *)filePath;
  
-- (void)loadVideo;
+- (BOOL)loadVideo;
   
 - (CMSampleBufferRef)nextSampleBuffer;
 

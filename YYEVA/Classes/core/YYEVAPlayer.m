@@ -62,6 +62,8 @@
     });
 }
 
+
+
  
 - (void)switchAssets:(YYEVAAssets *)assets
 {
@@ -76,7 +78,10 @@
         self.imgUrlKeys.count == 0 ?: [dict addEntriesFromDictionary:self.imgUrlKeys] ;
         assets.businessEffects = dict;
     }
-    [assets loadVideo];
+    BOOL loadResult = [assets loadVideo];
+    if (loadResult == NO) {
+        [self endPlay];
+    }
 }
 
 - (void)playWithFileUrl:(NSString *)url

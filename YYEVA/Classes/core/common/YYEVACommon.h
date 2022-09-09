@@ -39,7 +39,7 @@ typedef NS_ENUM(NSUInteger, YYEVAPlayerStatus) {
 
 //MP4资源播放的拉伸模式
 typedef NS_ENUM(NSInteger,YYEVAFillMode){
-    YYEVAContentMode_ScaleToFill = 0,
+    YYEVAContentMode_ScaleToFill = 0,  
     YYEVAContentMode_ScaleAspectFit = 1,
     YYEVAContentMode_ScaleAspectFill = 2,
 };
