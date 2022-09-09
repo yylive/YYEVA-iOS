@@ -63,9 +63,8 @@ CGRect getFrame(NSArray *arry)
      //4 + 2 + 2 = 8  * 4 = 32
     const int colunmCountForVertices = 4, colunmCountForCoordinate = 2, vertexDataLength = 32;
     float vertices[16], maskCoordinates[8];
-//    normalVerticesWithFillMode(self.renderFrame, size, self.src.sourceImage.size,self.src.fillMode,vertices);
-    normalVerticesWithFillMode(self.renderFrame, size, self.src.sourceImage.size,self.src.fillMode,vertices,fillMode,trueSize);
-    textureCoordinateFromRect(self.outputFrame, mSize, maskCoordinates);
+    normalVerticesWithFillMod(self.renderFrame, size, self.src.sourceImage.size,self.src.fillMode,vertices,fillMode,trueSize);
+    mask_textureCoordinateFromRect(self.outputFrame, mSize, maskCoordinates);
     float sourceCoordinates[8] = {
         0.0, 1.0,
         0.0, 0.0,

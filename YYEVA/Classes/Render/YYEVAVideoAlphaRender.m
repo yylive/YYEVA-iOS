@@ -31,7 +31,6 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 @implementation YYEVAVideoAlphaRender
 @synthesize completionPlayBlock;
 @synthesize playAssets;
-@synthesize inputSize = _inputSize;
 @synthesize fillMode = _fillMode;
 
 
@@ -53,16 +52,11 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     _fillMode = fillMode;
     [self setupVertex];
 }
-
-- (void)setInputSize:(CGSize)inputSize
-{
-    _inputSize = inputSize;
-    [self setupVertex];
-}
-
+ 
 - (void)playWithAssets:(YYEVAAssets *)assets
 {
     self.playAssets = assets;
+    [self setupVertex];
     CVMetalTextureCacheCreate(NULL, NULL, self.mtkView.device, NULL, &_textureCache);
 }
 
@@ -107,31 +101,48 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     float widthScaling = 1.0;
     CGSize drawableSize = self.mtkView.bounds.size;
     CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
-    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(self.inputSize, bounds);
+    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(self.playAssets.rgbSize, bounds);
+    
+    widthScaling =   drawableSize.width / insetRect.size.width;
+    heightScaling =   drawableSize.height / insetRect.size.height;
+    
+    CGFloat wRatio = 1.0;
+    CGFloat hRatio = 1.0;
+    
     switch (self.fillMode) {
-        case YYEVAContentMode_ScaleToFill:
-            heightScaling = 1.0;
-            widthScaling = 1.0;
-            break;
-            
         case YYEVAContentMode_ScaleAspectFit:
-            widthScaling = insetRect.size.width / drawableSize.width;
-            heightScaling = insetRect.size.height / drawableSize.height;
-            break;
+            if (widthScaling > heightScaling) {
+                hRatio = heightScaling;
+                wRatio = insetRect.size.width * hRatio / drawableSize.width;
+            } else {
+                wRatio = widthScaling;
+                hRatio = insetRect.size.height * wRatio / drawableSize.height;
+            }
             
+            break;
         case YYEVAContentMode_ScaleAspectFill:
-            widthScaling = drawableSize.height / insetRect.size.height;
-            heightScaling = drawableSize.width / insetRect.size.width;
+            
+            if (widthScaling < heightScaling) {
+                hRatio = heightScaling;
+                wRatio = insetRect.size.width * hRatio / drawableSize.width;
+            } else {
+                wRatio = widthScaling;
+                hRatio = insetRect.size.height * wRatio / drawableSize.height;
+            }
+            break;
+        default:
+            wRatio = 1.0;
+            hRatio = 1.0;
             break;
     }
-    self->_imageVertices[0] = -widthScaling;
-    self->_imageVertices[1] = -heightScaling;
-    self->_imageVertices[2] = -widthScaling;
-    self->_imageVertices[3] = heightScaling;
-    self->_imageVertices[4] = widthScaling;
-    self->_imageVertices[5] = -heightScaling;
-    self->_imageVertices[6] = widthScaling;
-    self->_imageVertices[7] = heightScaling;
+    self->_imageVertices[0] = -wRatio;
+    self->_imageVertices[1] = -hRatio;
+    self->_imageVertices[2] = -wRatio;
+    self->_imageVertices[3] = hRatio;
+    self->_imageVertices[4] = wRatio;
+    self->_imageVertices[5] = -hRatio;
+    self->_imageVertices[6] = wRatio;
+    self->_imageVertices[7] = hRatio;
     
 }
 
@@ -139,8 +150,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 
 // 设置顶点
 - (void)setupVertex {
-     
-    
+      
     [self recalculateViewGeometry];
     
     YSVideoMetalVertex quadVertices[] =
@@ -190,8 +200,6 @@ extern vector_float3 kColorConversion601FullRangeOffset;
      
     if(renderPassDescriptor && sampleBuffer)
     {
-        NSLog(@"-----%zd----",self.playAssets.frameIndex);
-        
         //设置renderPassDescriptor中颜色附着(默认背景色)
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0f);
         //根据渲染描述信息创建渲染命令编码器

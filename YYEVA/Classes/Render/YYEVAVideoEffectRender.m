@@ -14,7 +14,7 @@
 extern matrix_float3x3 kColorConversion601FullRangeMatrix;
 extern vector_float3 kColorConversion601FullRangeOffset;
 
-@interface YYEVAVideoEffectRender() 
+@interface YYEVAVideoEffectRender()
 {
     float _imageVertices[8];
 }
@@ -33,8 +33,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 
 @implementation YYEVAVideoEffectRender
 @synthesize completionPlayBlock;
-@synthesize playAssets; 
-@synthesize inputSize = _inputSize;
+@synthesize playAssets;
 @synthesize fillMode = _fillMode;
 
 - (instancetype)initWithMetalView:(MTKView *)mtkView
@@ -56,13 +55,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     _fillMode = fillMode;
     [self setupVertex];
 }
-
-- (void)setInputSize:(CGSize)inputSize
-{
-    _inputSize = inputSize;
-    [self setupVertex];
-}
-
+  
 
 - (void)playWithAssets:(YYEVAAssets *)assets
 {
@@ -93,31 +86,47 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     float widthScaling = 1.0;
     CGSize drawableSize = self.mtkView.bounds.size;
     CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
-    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(self.inputSize, bounds);
+    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(self.playAssets.rgbSize, bounds);
+    
+    widthScaling =   drawableSize.width / insetRect.size.width;
+    heightScaling =   drawableSize.height / insetRect.size.height;
+    
+    CGFloat wRatio = 1.0;
+    CGFloat hRatio = 1.0;
+    
     switch (self.fillMode) {
-        case YYEVAContentMode_ScaleToFill:
-            heightScaling = 1.0;
-            widthScaling = 1.0;
-            break;
-            
         case YYEVAContentMode_ScaleAspectFit:
-            widthScaling = insetRect.size.width / drawableSize.width;
-            heightScaling = insetRect.size.height / drawableSize.height;
+            if (widthScaling > heightScaling) {
+                hRatio = heightScaling;
+                wRatio = insetRect.size.width * hRatio / drawableSize.width;
+            } else {
+                wRatio = widthScaling;
+                hRatio = insetRect.size.height * wRatio / drawableSize.height;
+            } 
             break;
-            
         case YYEVAContentMode_ScaleAspectFill:
-            widthScaling = drawableSize.height / insetRect.size.height;
-            heightScaling = drawableSize.width / insetRect.size.width;
+            
+            if (widthScaling < heightScaling) {
+                hRatio = heightScaling;
+                wRatio = insetRect.size.width * hRatio / drawableSize.width;
+            } else {
+                wRatio = widthScaling;
+                hRatio = insetRect.size.height * wRatio / drawableSize.height;
+            }
+            break;
+        default:
+            wRatio = 1.0;
+            hRatio = 1.0;
             break;
     }
-    self->_imageVertices[0] = -widthScaling;
-    self->_imageVertices[1] = -heightScaling;
-    self->_imageVertices[2] = -widthScaling;
-    self->_imageVertices[3] = heightScaling;
-    self->_imageVertices[4] = widthScaling;
-    self->_imageVertices[5] = -heightScaling;
-    self->_imageVertices[6] = widthScaling;
-    self->_imageVertices[7] = heightScaling;
+    self->_imageVertices[0] = -wRatio;
+    self->_imageVertices[1] = -hRatio;
+    self->_imageVertices[2] = -wRatio;
+    self->_imageVertices[3] = hRatio;
+    self->_imageVertices[4] = wRatio;
+    self->_imageVertices[5] = -hRatio;
+    self->_imageVertices[6] = wRatio;
+    self->_imageVertices[7] = hRatio;
 }
 
 
@@ -294,7 +303,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
             //    vector_float4 positon;  4
             //    vector_float2 sourceTextureCoordinate; 2
             //    vector_float2 maskTextureCoordinate; 2
-            // 」 
+            // 」
             id<MTLBuffer> vertexBuffer = [mergeInfo vertexBufferWithContainerSize:size
                                                                 maskContianerSize:videoSize
                                                                            device:self.device fillMode:self.fillMode trueSize:self.mtkView.bounds.size];
@@ -428,3 +437,4 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 
 
 @end
+

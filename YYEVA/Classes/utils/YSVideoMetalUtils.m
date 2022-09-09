@@ -46,42 +46,9 @@ void generatorVertices(CGRect rect, CGSize containerSize, float vertices[16]) {
     replaceArrayElements(vertices, tempVertices, 16);
 }
  
+ 
 
-void normalVerticesWithFillMode(CGRect rect, CGSize containerSize, CGSize picSize,YYEVAEffectSourceImageFillMode fillMode, float vertices[16],YYEVAFillMode videoFillMode,CGSize trueSize) {
-    if (picSize.width > 0 && picSize.height > 0) {
-        float picWidth = picSize.width;
-        float picHeight = picSize.height;
-        float rectWidth = rect.size.width;
-        float rectHeight = rect.size.height;
-        float wRatio = rectWidth / picWidth;
-        float hRatio = rectHeight/ picHeight;
-        float ratio = wRatio;
-        if (fillMode == YYEVAEffectSourceImageFillModeAspectFit) {  //eAspectFit
-            ratio = MIN(wRatio, hRatio);
-        } else {
-            ratio = MAX(wRatio, hRatio);
-        }
-       float trueW;
-       float trueH;
-       trueW =  (picWidth * ratio);
-       trueH =  (picHeight * ratio);
-       //有改变  调整 x y值
-       if (trueW != rectWidth || trueH != rectHeight) {
-           float trueX = rect.origin.x;
-           float trueY = rect.origin.y;
-           if (rectWidth - trueW) {
-               trueX += (rectWidth - trueW) / 2;
-           }
-           if (rectHeight - trueH) {
-               trueY += (rectHeight - trueH) / 2;
-           }
-           
-           rect = CGRectMake(trueX, trueY, trueW, trueH);
-       }
-    }
-    
-    //containerSize
-    
+void normalVerticesWithFillMod(CGRect rect, CGSize containerSize, CGSize picSize,YYEVAEffectSourceImageFillMode fillMode, float vertices[16],YYEVAFillMode videoFillMode,CGSize trueSize) {
     //trueSize
     float heightScaling = 1.0;
     float widthScaling = 1.0;
@@ -107,10 +74,11 @@ void normalVerticesWithFillMode(CGRect rect, CGSize containerSize, CGSize picSiz
      
 //    rect
 //    rect = CGRectMake(rect.origin.x * widthScaling, rect.origin.y * heightScaling, rect.size.width, rect.size.height);
-     
+//    widthScaling = 1;
+//    heightScaling = 1;
     float originX, originY, width, height;
     originX = (-1+2*rect.origin.x/containerSize.width) * widthScaling;
-    originY = (1-2*rect.origin.y/containerSize.height) * heightScaling;
+    originY = (1-2*rect.origin.y/containerSize.height) * heightScaling ;
     width = (2*rect.size.width/containerSize.width) * widthScaling;
     height = (2*rect.size.height/containerSize.height) * heightScaling;
       
@@ -122,6 +90,8 @@ void normalVerticesWithFillMode(CGRect rect, CGSize containerSize, CGSize picSiz
     replaceArrayElements(vertices, tempVertices, 16);
 }
 
+
+
 void textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coordinates[8])
 {
     float originX, originY, width, height;
@@ -129,8 +99,6 @@ void textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coordinate
     originY = rect.origin.y/containerSize.height;
     width = rect.size.width/containerSize.width;
     height = rect.size.height/containerSize.height;
-    
-    
      
     float tempCoordintes[] = {
         originX, originY+height,//0,1
@@ -139,6 +107,26 @@ void textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coordinate
         originX+width, originY}; //1,0
     replaceArrayElements(coordinates, tempCoordintes, 8);
 }
+
+
+void mask_textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coordinates[8])
+{
+    float originX, originY, width, height;
+    originX = rect.origin.x/containerSize.width;
+    originY = rect.origin.y/containerSize.height;
+    width = rect.size.width/containerSize.width;
+    height = rect.size.height/containerSize.height;
+     
+    float tempCoordintes[] = {
+        originX, originY,       //0,0
+        originX, originY+height,//0,1
+        originX+width, originY, //1,0
+        originX+width, originY+height, //1,1
+    };
+        
+    replaceArrayElements(coordinates, tempCoordintes, 8);
+}
+
 
 @implementation YSVideoMetalUtils
 
@@ -213,3 +201,4 @@ void textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coordinate
 }
  
 @end
+

@@ -31,8 +31,7 @@
    //    NSDictionary *attriDict = [fileManager attributesOfItemAtPath:path error:nil];
        //获取文件大小
    //    NSString *fileSize = attriDict[NSFileSize];
-       
-       NSTimeInterval timeInterval = [NSDate date].timeIntervalSince1970;
+        
        AVAsset *asset = [AVAsset assetWithURL:[NSURL fileURLWithPath:file]];
        NSArray<AVMetadataItem *> *commonMetadata = asset.metadata;
        bool find = false;
@@ -48,11 +47,9 @@
        }
        NSString *matchStart = @"yyeffectmp4json[[";
        NSString *matchEnd = @"]]yyeffectmp4json";
-        
-       
+         
        
        if ([jsonStr containsString:matchStart] && [jsonStr containsString:matchEnd]) {
-           NSLog(@"jsonStr:%@",jsonStr);
            NSMutableString *json = [[NSMutableString alloc] initWithString:jsonStr];
            //匹配出中间字符串
            [json replaceOccurrencesOfString:matchStart withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, json.length)];
@@ -62,11 +59,6 @@
            NSString *result = (NSString *)json;
            
            NSDictionary *dict = [self parseWithBase64:result];
-              
-           NSTimeInterval curtimeInterval = [NSDate date].timeIntervalSince1970;
-           
-           NSLog(@"%f,dict : %@",curtimeInterval - timeInterval,dict);
-           
            return dict;
            
        }
@@ -85,9 +77,7 @@
     NSData *zlibData = [self zlibInflate:data];
     
     NSDictionary *json = [NSJSONSerialization JSONObjectWithData:zlibData options:kNilOptions error:nil];
-    
-    NSLog(@"%@",json);
-    
+     
     return json;
   
 }

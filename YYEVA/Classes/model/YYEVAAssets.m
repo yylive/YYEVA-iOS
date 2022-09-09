@@ -105,7 +105,6 @@
         NSLog(@"filepath not exits:%@",self.filePath);
         return;
     }
-      
     NSDictionary *dictionary = [self.demuxer demuxEffectJsonWithFilePath:self.filePath];
     
     YYEVAEffectInfo *effectInfo = [YYEVAEffectInfo effectInfoWithDictionary:dictionary];
@@ -125,7 +124,7 @@
     }
     
     //获取视频的分辨率
-    if (CGSizeEqualToSize(effectInfo.rgbFrame.size, CGSizeZero)) {
+    if (!CGSizeEqualToSize(effectInfo.rgbFrame.size, CGSizeZero)) {
         self.rgbSize = effectInfo.rgbFrame.size;
     }
     
@@ -151,7 +150,6 @@
     
     AVAssetTrack *assetAudioTrack = [[asset tracksWithMediaType:AVMediaTypeAudio] firstObject];
     if (!assetAudioTrack) {
-        NSLog(@"tracksWithMediaAudioType url:%@ failure",self.filePath);
         _audioPlayer = nil;
     } else {
         self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:self.filePath] error:nil];
@@ -267,7 +265,7 @@
 - (void)dealloc
 {
     [self clear];
-    NSLog(@"-%@--%zd---", self,CFArrayGetCount(self->_sampleBufferQueue));
+    
     
     CFRelease(self->_sampleBufferQueue);
     self->_sampleBufferQueue = NULL;

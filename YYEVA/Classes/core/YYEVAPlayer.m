@@ -91,7 +91,6 @@
         self.videoRender = [[YYEVAVideoAlphaRender alloc] initWithMetalView:self.mtkView];
     }
    self.videoRender.fillMode = self.mode;
-   self.videoRender.inputSize = self.assets.rgbSize;
    self.mtkView.delegate = self.videoRender;
    self.mtkView.frame = self.bounds;
    self.mtkView.backgroundColor = [UIColor clearColor];
