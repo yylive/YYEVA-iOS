@@ -264,20 +264,47 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 {
     //设置yuv纹理数据
     CVPixelBufferRef pixelBufferRef = CMSampleBufferGetImageBuffer(sampleBuffer);
-//    //y纹理
-    id<MTLTexture> texture = nil;
-    size_t width = CVPixelBufferGetWidthOfPlane(pixelBufferRef, planeIndex);
-    size_t height = CVPixelBufferGetHeightOfPlane(pixelBufferRef, planeIndex);
-    CVMetalTextureRef textureRef = NULL;
-    CVReturn status =  CVMetalTextureCacheCreateTextureFromImage(NULL, _textureCache, pixelBufferRef, NULL, pixelFormat, width, height, planeIndex, &textureRef);
-    if (status == kCVReturnSuccess) {
-        texture = CVMetalTextureGetTexture(textureRef);
-        CVBufferRelease(textureRef);
-        textureRef = NULL;
-    }
-    CVMetalTextureCacheFlush(_textureCache, 0);
-    pixelBufferRef = NULL;
-    return texture;
+#if TARGET_OS_SIMULATOR || TARGET_MACOS
+    if(CVPixelBufferLockBaseAddress(pixelBufferRef, 0) != kCVReturnSuccess)
+       {
+           return  nil;
+       }
+        size_t width = CVPixelBufferGetWidthOfPlane(pixelBufferRef, planeIndex);
+        size_t height = CVPixelBufferGetHeightOfPlane(pixelBufferRef, planeIndex);
+       if (width == 0 || height == 0) {
+           return nil;
+       }
+       MTLTextureDescriptor *descriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                                                             width:width
+                                                                                            height:height
+                                                                                         mipmapped:NO];
+    
+  
+       descriptor.usage = (MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite | MTLTextureUsageRenderTarget);
+       id<MTLTexture> texture = [self.device newTextureWithDescriptor:descriptor];
+       MTLRegion region = MTLRegionMake2D(0, 0, width, height);
+       [texture replaceRegion:region
+                  mipmapLevel:0
+                    withBytes:CVPixelBufferGetBaseAddressOfPlane(pixelBufferRef, planeIndex)
+                  bytesPerRow:CVPixelBufferGetBytesPerRowOfPlane(pixelBufferRef,planeIndex)];
+       return texture;
+#else
+    //    //y纹理
+        id<MTLTexture> texture = nil;
+        size_t width = CVPixelBufferGetWidthOfPlane(pixelBufferRef, planeIndex);
+        size_t height = CVPixelBufferGetHeightOfPlane(pixelBufferRef, planeIndex);
+        CVMetalTextureRef textureRef = NULL;
+        CVReturn status =  CVMetalTextureCacheCreateTextureFromImage(NULL, _textureCache, pixelBufferRef, NULL, pixelFormat, width, height, planeIndex, &textureRef);
+        if (status == kCVReturnSuccess) {
+            texture = CVMetalTextureGetTexture(textureRef);
+            CFRelease(textureRef);
+            textureRef = NULL;
+        }
+        CVMetalTextureCacheFlush(_textureCache, 0);
+        pixelBufferRef = NULL;
+        return texture;
+#endif
 }
 
 @end
+
