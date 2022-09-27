@@ -18,7 +18,6 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 {
     float _imageVertices[8];
     float _bgImageVertices[8];
-    CVPixelBufferRef _bgPixelBufferRef;
 }
 @property (nonatomic, weak) MTKView *mtkView;
 @property (nonatomic, strong) id<MTLDevice> device;
@@ -54,7 +53,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 
 - (void)dealloc
 {
-    CFRelease(_textureCache);
+    CFRelease(_textureCache); 
 }
 
 
