@@ -200,5 +200,55 @@ void mask_textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coord
     return designedFont;
 }
  
+
+//如果图像缓冲区是平面的，则为映射纹理数据的平面索引。对于非平面图像缓冲区忽
++ (id<MTLTexture>)getTextureFromPixelBuffer:(CVPixelBufferRef)pixelBufferRef
+                                  planeIndex:(size_t)planeIndex
+                                 pixelFormat:(MTLPixelFormat)pixelFormat
+                                     device:(id<MTLDevice>)device
+                               textureCache:(CVMetalTextureCacheRef)textureCache
+{
+    //设置yuv纹理数据
+#if TARGET_OS_SIMULATOR || TARGET_MACOS
+    if(CVPixelBufferLockBaseAddress(pixelBufferRef, 0) != kCVReturnSuccess)
+       {
+           return  nil;
+       }
+        size_t width = CVPixelBufferGetWidthOfPlane(pixelBufferRef, planeIndex);
+        size_t height = CVPixelBufferGetHeightOfPlane(pixelBufferRef, planeIndex);
+       if (width == 0 || height == 0) {
+           return nil;
+       }
+       MTLTextureDescriptor *descriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                                                             width:width
+                                                                                            height:height
+                                                                                         mipmapped:NO];
+    
+  
+       descriptor.usage = (MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite | MTLTextureUsageRenderTarget);
+       id<MTLTexture> texture = [device newTextureWithDescriptor:descriptor];
+       MTLRegion region = MTLRegionMake2D(0, 0, width, height);
+       [texture replaceRegion:region
+                  mipmapLevel:0
+                    withBytes:CVPixelBufferGetBaseAddressOfPlane(pixelBufferRef, planeIndex)
+                  bytesPerRow:CVPixelBufferGetBytesPerRowOfPlane(pixelBufferRef,planeIndex)];
+       return texture;
+#else
+    //    //y纹理
+        id<MTLTexture> texture = nil;
+        size_t width = CVPixelBufferGetWidthOfPlane(pixelBufferRef, planeIndex);
+        size_t height = CVPixelBufferGetHeightOfPlane(pixelBufferRef, planeIndex);
+        CVMetalTextureRef textureRef = NULL;
+        CVReturn status =  CVMetalTextureCacheCreateTextureFromImage(NULL, textureCache, pixelBufferRef, NULL, pixelFormat, width, height, planeIndex, &textureRef);
+        if (status == kCVReturnSuccess) {
+            texture = CVMetalTextureGetTexture(textureRef);
+            CFRelease(textureRef);
+            textureRef = NULL;
+        }
+        CVMetalTextureCacheFlush(textureCache, 0);
+        pixelBufferRef = NULL;
+        return texture;
+#endif
+}
 @end
 

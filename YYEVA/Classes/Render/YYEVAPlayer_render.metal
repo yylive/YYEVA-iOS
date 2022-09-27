@@ -94,13 +94,16 @@ maskFragmentSharder(VertexMaskSharderOutput input [[stage_in]],
 {
     constexpr sampler textureSampler (mag_filter::linear,
                                       min_filter::linear);
-    
-    float3 sourceRGB = RGBColorFromYuvTextures(textureSampler, input.rgbTextureCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
-    float3 alphaRGB = RGBColorFromYuvTextures(textureSampler, input.alphaTextureCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
 
-    
-    //新增mask
+    float3 sourceYUV = float3(textureY.sample(textureSampler, input.rgbTextureCoordinate).r,
+                        textureUV.sample(textureSampler, input.rgbTextureCoordinate).rg);
+    float3 alphaYUV = float3(textureY.sample(textureSampler, input.alphaTextureCoordinate).r,
+                        textureUV.sample(textureSampler, input.alphaTextureCoordinate).rg);
+    float3 sourceRGB = convertMatrix->matrix * (sourceYUV + convertMatrix->offset);
+    float3 alphaRGB = convertMatrix->matrix * (alphaYUV + convertMatrix->offset);
+//    //新增mask
     return float4(sourceRGB, alphaRGB.r);
+ 
 }
 
 vertex VertexElementSharderOutput
@@ -131,3 +134,25 @@ fragment float4 elementFragmentSharder(VertexElementSharderOutput input [[ stage
     return float4(source.rgb, alpha);
 }
 
+
+vertex VertexSharderOutput
+bgVertexShader(uint vertexID [[ vertex_id ]],
+             constant YSVideoMetalVertex *vertexArray [[ buffer(YSVideoMetalVertexInputIndexVertices) ]])
+{
+    VertexSharderOutput out;
+    out.postion = float4(vertexArray[vertexID].positon);
+    out.textureCoordinate = vertexArray[vertexID].texturCoordinate;
+    return out;
+}
+
+ 
+fragment float4
+bgFragmentSharder(VertexSharderOutput input [[stage_in]],
+               texture2d<float> texture [[ texture(YSVideoMetalFragmentTextureIndexTextureY) ]],
+               constant YSVideoMetalConvertMatrix *convertMatrix [[ buffer(YSVideoMetalFragmentBufferIndexMatrix) ]])
+{
+    constexpr sampler textureSampler (mag_filter::linear,
+                                      min_filter::linear);
+      
+    return texture.sample(textureSampler, input.textureCoordinate);
+}

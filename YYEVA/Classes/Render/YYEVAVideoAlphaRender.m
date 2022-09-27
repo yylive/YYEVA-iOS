@@ -8,7 +8,7 @@
 #import "YYEVAVideoAlphaRender.h"
 #import "YYEVAAssets.h"
 #include "YYEVAVideoShareTypes.h"
-
+#import "YSVideoMetalUtils.h"
 extern matrix_float3x3 kColorConversion601FullRangeMatrix;
 extern vector_float3 kColorConversion601FullRangeOffset;
 
@@ -143,7 +143,6 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     self->_imageVertices[5] = -hRatio;
     self->_imageVertices[6] = wRatio;
     self->_imageVertices[7] = hRatio;
-    
 }
 
 
@@ -159,6 +158,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
         { { self->_imageVertices[2],  self->_imageVertices[3], 0.0 ,1.0},  { 0.f, 0.0f } },
         { { self->_imageVertices[4], self->_imageVertices[5], 0.0,1.0 },  { 1.f, 1.f } },
         { { self->_imageVertices[6], self->_imageVertices[7], 0.0,1.0 },  { 1.f, 0.f } }
+
     };
     
     //2.创建顶点缓存区
@@ -264,47 +264,12 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 {
     //设置yuv纹理数据
     CVPixelBufferRef pixelBufferRef = CMSampleBufferGetImageBuffer(sampleBuffer);
-#if TARGET_OS_SIMULATOR || TARGET_MACOS
-    if(CVPixelBufferLockBaseAddress(pixelBufferRef, 0) != kCVReturnSuccess)
-       {
-           return  nil;
-       }
-        size_t width = CVPixelBufferGetWidthOfPlane(pixelBufferRef, planeIndex);
-        size_t height = CVPixelBufferGetHeightOfPlane(pixelBufferRef, planeIndex);
-       if (width == 0 || height == 0) {
-           return nil;
-       }
-       MTLTextureDescriptor *descriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
-                                                                                             width:width
-                                                                                            height:height
-                                                                                         mipmapped:NO];
-    
-  
-       descriptor.usage = (MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite | MTLTextureUsageRenderTarget);
-       id<MTLTexture> texture = [self.device newTextureWithDescriptor:descriptor];
-       MTLRegion region = MTLRegionMake2D(0, 0, width, height);
-       [texture replaceRegion:region
-                  mipmapLevel:0
-                    withBytes:CVPixelBufferGetBaseAddressOfPlane(pixelBufferRef, planeIndex)
-                  bytesPerRow:CVPixelBufferGetBytesPerRowOfPlane(pixelBufferRef,planeIndex)];
-       return texture;
-#else
-    //    //y纹理
-        id<MTLTexture> texture = nil;
-        size_t width = CVPixelBufferGetWidthOfPlane(pixelBufferRef, planeIndex);
-        size_t height = CVPixelBufferGetHeightOfPlane(pixelBufferRef, planeIndex);
-        CVMetalTextureRef textureRef = NULL;
-        CVReturn status =  CVMetalTextureCacheCreateTextureFromImage(NULL, _textureCache, pixelBufferRef, NULL, pixelFormat, width, height, planeIndex, &textureRef);
-        if (status == kCVReturnSuccess) {
-            texture = CVMetalTextureGetTexture(textureRef);
-            CFRelease(textureRef);
-            textureRef = NULL;
-        }
-        CVMetalTextureCacheFlush(_textureCache, 0);
-        pixelBufferRef = NULL;
-        return texture;
-#endif
+    id<MTLTexture> texture = [YSVideoMetalUtils getTextureFromPixelBuffer:pixelBufferRef
+                                planeIndex:planeIndex
+                               pixelFormat:pixelFormat
+                                    device:self.device textureCache:self.textureCache];
+    return texture;
 }
-
+ 
 @end
 

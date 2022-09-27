@@ -15,7 +15,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface YYEVAVideoEffectRender : NSObject <IYYEVAVideoRenderProtol>
-
+- (void)setBgImageUrl:(NSString *)bgImageUrl contentMode:(UIViewContentMode)bgContentMode;
 @end
  
 

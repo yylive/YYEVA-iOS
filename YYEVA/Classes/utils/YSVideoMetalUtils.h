@@ -29,6 +29,13 @@ extern "C" {
                      textColor:(UIColor *)textColor
                       fontSize:(float)fontSize
                       rectSize:(CGSize)rectSize;
+
++ (id<MTLTexture>)getTextureFromPixelBuffer:(CVPixelBufferRef)pixelBufferRef
+                                  planeIndex:(size_t)planeIndex
+                                 pixelFormat:(MTLPixelFormat)pixelFormat
+                                     device:(id<MTLDevice>)device
+                               textureCache:(CVMetalTextureCacheRef)textureCache;
+
 @end
 
 

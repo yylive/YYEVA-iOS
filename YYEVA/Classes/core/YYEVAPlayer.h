@@ -33,6 +33,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setText:(NSString *)text forKey:(NSString *)key;
 - (void)setImageUrl:(NSString *)imgUrl forKey:(NSString *)key;
 
+//设置背景层
+- (void)setBackgroundImage:(NSString *)imgUrl
+                 scaleMode:(UIViewContentMode)contentMode;
+
 @end
 
 NS_ASSUME_NONNULL_END

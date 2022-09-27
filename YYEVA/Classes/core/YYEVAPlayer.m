@@ -20,6 +20,8 @@
 @property (nonatomic, copy)   NSString *fileUrl;
 @property (nonatomic, strong) NSMutableDictionary *imgUrlKeys;
 @property (nonatomic, strong) NSMutableDictionary *textKeys;
+@property (nonatomic, copy)   NSString *bgImageUrl;
+@property (nonatomic, assign) UIViewContentMode bgContentMode;
 @end
 
 @implementation YYEVAPlayer
@@ -90,8 +92,9 @@
     [self switchAssets:assets];
     //包含描述信息 走的是maskRender
     [self setupMetal];
-    if (self.assets.effectInfo) {
+    if (self.assets.isEffectVideo) {
         self.videoRender = [[YYEVAVideoEffectRender alloc] initWithMetalView:self.mtkView];
+        [(YYEVAVideoEffectRender *)self.videoRender setBgImageUrl:self.bgImageUrl contentMode:self.bgContentMode];
     } else {
         self.videoRender = [[YYEVAVideoAlphaRender alloc] initWithMetalView:self.mtkView];
     }
@@ -166,6 +169,12 @@
         _textKeys = [NSMutableDictionary dictionary];
     }
     return _textKeys;
+}
+ 
+- (void)setBackgroundImage:(NSString *)imgUrl scaleMode:(UIViewContentMode)contentMode
+{
+    self.bgImageUrl = imgUrl;
+    self.bgContentMode = contentMode;
 }
 
 

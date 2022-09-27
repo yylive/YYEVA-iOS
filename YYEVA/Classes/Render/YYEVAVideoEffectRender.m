@@ -17,18 +17,26 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 @interface YYEVAVideoEffectRender()
 {
     float _imageVertices[8];
+    float _bgImageVertices[8];
+    CVPixelBufferRef _bgPixelBufferRef;
 }
 @property (nonatomic, weak) MTKView *mtkView;
 @property (nonatomic, strong) id<MTLDevice> device;
 @property (nonatomic, strong) id<MTLRenderPipelineState> defaultRenderPipelineState;
+@property (nonatomic, strong) id<MTLRenderPipelineState> bgRenderPipelineState;
 @property (nonatomic, strong) id<MTLRenderPipelineState> mergeRenderPipelineState;
 @property (nonatomic, strong) id<MTLBuffer> vertexBuffer;
 @property (nonatomic, strong) id<MTLBuffer> convertMatrix;
 @property (nonatomic, strong) id<MTLBuffer> elementVertexBuffer;
+@property (nonatomic, strong) id<MTLBuffer> bgVertexBuffer;
+@property (nonatomic, strong) id<MTLTexture> bgImageTexture;
 @property (nonatomic, strong) id<MTLCommandQueue> commandQueue;
 @property (nonatomic, assign) CVMetalTextureCacheRef textureCache;
 @property (nonatomic, assign) vector_uint2 viewportSize;
 @property (nonatomic, assign) NSInteger numVertices;
+@property (nonatomic, assign) NSInteger bgNumVertices;
+@property (nonatomic, copy) NSString *bgImageUrl;
+@property (nonatomic, assign) UIViewContentMode bgContentMode;
 @end
 
 @implementation YYEVAVideoEffectRender
@@ -39,7 +47,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 - (instancetype)initWithMetalView:(MTKView *)mtkView
 {
     if (self = [super init]) {
-        [self setupRenderWithMetal:mtkView];
+        [self setupRenderWithMetal:mtkView]; 
     }
     return self;
 }
@@ -56,6 +64,13 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     [self setupVertex];
 }
   
+- (void)setBgImageUrl:(NSString *)bgImageUrl contentMode:(UIViewContentMode)bgContentMode
+{
+    self.bgImageUrl = bgImageUrl;
+    self.bgContentMode = bgContentMode;
+    
+    [self recalculateBGViewGeometry];
+}
 
 - (void)playWithAssets:(YYEVAAssets *)assets
 {
@@ -82,11 +97,71 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 
 - (void)recalculateViewGeometry
 {
+     
+    NSArray *imgVerices = [self calculateGeometry:self.playAssets.rgbSize
+                                     drawableSize:self.mtkView.bounds.size
+                                         fillMode:(UIViewContentMode)self.fillMode];
+    
+    self->_imageVertices[0] = [imgVerices[0] floatValue];
+    self->_imageVertices[1] = [imgVerices[1] floatValue];
+    self->_imageVertices[2] = [imgVerices[2] floatValue];
+    self->_imageVertices[3] = [imgVerices[3] floatValue];
+    self->_imageVertices[4] = [imgVerices[4] floatValue];
+    self->_imageVertices[5] = [imgVerices[5] floatValue];
+    self->_imageVertices[6] = [imgVerices[6] floatValue];
+    self->_imageVertices[7] = [imgVerices[7] floatValue];
+}
+
+
+- (void)recalculateBGViewGeometry
+{
+    CGSize size = CGSizeZero;
+    
+    if (self.bgImageUrl.length > 0) {
+        UIImage *bgImage = [UIImage imageNamed:self.bgImageUrl];
+        size = bgImage.size;
+        self.bgImageTexture = [self loadTextureWithImage:bgImage
+                                                  device:self.device];
+    }
+     
+    NSArray *imgVerices = [self calculateGeometry:size
+                                     drawableSize:self.mtkView.bounds.size
+                                         fillMode:(UIViewContentMode)self.bgContentMode];
+    
+    self->_bgImageVertices[0] = [imgVerices[0] floatValue];
+    self->_bgImageVertices[1] = [imgVerices[1] floatValue];
+    self->_bgImageVertices[2] = [imgVerices[2] floatValue];
+    self->_bgImageVertices[3] = [imgVerices[3] floatValue];
+    self->_bgImageVertices[4] = [imgVerices[4] floatValue];
+    self->_bgImageVertices[5] = [imgVerices[5] floatValue];
+    self->_bgImageVertices[6] = [imgVerices[6] floatValue];
+    self->_bgImageVertices[7] = [imgVerices[7] floatValue];
+    
+    
+    YSVideoMetalVertex quadVertices[] =
+    {   // 顶点坐标，分别是x、y、z；    纹理坐标，x、y；
+        { { self->_bgImageVertices[0], self->_bgImageVertices[1], 0.0 ,1.0},  { 0.f, 0.0f} },
+        { { self->_bgImageVertices[2],  self->_bgImageVertices[3], 0.0 ,1.0},  { 0.f, 1.0f } },
+        { { self->_bgImageVertices[4], self->_bgImageVertices[5], 0.0,1.0 },  { 1.f, 0.f } },
+        { { self->_bgImageVertices[6], self->_bgImageVertices[7], 0.0,1.0 },  { 1.f, 1.f } }
+    };
+    
+    //2.创建顶点缓存区
+    self.bgVertexBuffer = [self.mtkView.device newBufferWithBytes:quadVertices
+                                                     length:sizeof(quadVertices)
+                                                    options:MTLResourceStorageModeShared];
+    //3.计算顶点个数
+    self.bgNumVertices = sizeof(quadVertices) / sizeof(YSVideoMetalVertex);
+}
+
+- (NSArray *)calculateGeometry:(CGSize)size
+                  drawableSize:(CGSize)drawableSize
+                      fillMode:(UIViewContentMode)mode
+{
     float heightScaling = 1.0;
     float widthScaling = 1.0;
-    CGSize drawableSize = self.mtkView.bounds.size;
     CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
-    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(self.playAssets.rgbSize, bounds);
+    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(size, bounds);
     
     widthScaling =   drawableSize.width / insetRect.size.width;
     heightScaling =   drawableSize.height / insetRect.size.height;
@@ -94,8 +169,8 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     CGFloat wRatio = 1.0;
     CGFloat hRatio = 1.0;
     
-    switch (self.fillMode) {
-        case YYEVAContentMode_ScaleAspectFit:
+    switch (mode) {
+        case UIViewContentModeScaleAspectFit:
             if (widthScaling > heightScaling) {
                 hRatio = heightScaling;
                 wRatio = insetRect.size.width * hRatio / drawableSize.width;
@@ -104,7 +179,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
                 hRatio = insetRect.size.height * wRatio / drawableSize.height;
             }
             break;
-        case YYEVAContentMode_ScaleAspectFill:
+        case UIViewContentModeScaleAspectFill:
             
             if (widthScaling < heightScaling) {
                 hRatio = heightScaling;
@@ -119,16 +194,10 @@ extern vector_float3 kColorConversion601FullRangeOffset;
             hRatio = 1.0;
             break;
     }
-    self->_imageVertices[0] = -wRatio;
-    self->_imageVertices[1] = -hRatio;
-    self->_imageVertices[2] = -wRatio;
-    self->_imageVertices[3] = hRatio;
-    self->_imageVertices[4] = wRatio;
-    self->_imageVertices[5] = -hRatio;
-    self->_imageVertices[6] = wRatio;
-    self->_imageVertices[7] = hRatio;
+    
+    NSArray *vertics = @[@(-wRatio),@(-hRatio),@(-wRatio),@(hRatio),@(wRatio),@(-hRatio),@(wRatio),@(hRatio)];
+    return vertics;
 }
-
 
 
  
@@ -136,6 +205,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 - (void)setupVertex
 {
     [self recalculateViewGeometry];
+    
       
     //需要将assets的描述信息来构建顶点和纹理数据
     YYEVAEffectInfo *effectInfo = self.playAssets.effectInfo;
@@ -251,16 +321,25 @@ extern vector_float3 kColorConversion601FullRangeOffset;
         id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
         //设置视口大小(显示区域)
         [renderEncoder setViewport:(MTLViewport){0.0, 0.0, self.viewportSize.x, self.viewportSize.y, -1.0, 1.0 }];
-//        //Y纹理
+ 
+        if (self.bgImageTexture != nil) {
+            [self drawBgWithRenderCommandEncoder:renderEncoder
+                                        texture:self.bgImageTexture];
+        }
+        
+        
+        //MP4纹理
         id<MTLTexture> textureY = [self getTextureFromSampleBuffer:sampleBuffer
                                                         planeIndex:0
                                                        pixelFormat:MTLPixelFormatR8Unorm];
         id<MTLTexture> textureUV = [self getTextureFromSampleBuffer:sampleBuffer
                                                          planeIndex:1 pixelFormat:MTLPixelFormatRG8Unorm];
-//
-        [self drawBackgroundWithRenderCommandEncoder:renderEncoder
+        
+        [self drawVideoSampleWithRenderCommandEncoder:renderEncoder
                                             textureY:textureY
                                            textureUV:textureUV];
+        
+        
         if (mergeInfoList) {
             [self drawMergedAttachments:mergeInfoList
                                yTexture:textureY
@@ -346,7 +425,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     return nil;
 }
 
-- (void)drawBackgroundWithRenderCommandEncoder:(id<MTLRenderCommandEncoder>)renderCommandEncoder
+- (void)drawVideoSampleWithRenderCommandEncoder:(id<MTLRenderCommandEncoder>)renderCommandEncoder
                                       textureY:(id<MTLTexture>)textureY
                                      textureUV:(id<MTLTexture>)textureUV
 {
@@ -366,6 +445,25 @@ extern vector_float3 kColorConversion601FullRangeOffset;
                       vertexCount:self.numVertices];
 }
 
+
+- (void)drawBgWithRenderCommandEncoder:(id<MTLRenderCommandEncoder>)renderCommandEncoder
+                               texture:(id<MTLTexture>)texture
+{
+    [renderCommandEncoder setRenderPipelineState:self.bgRenderPipelineState];
+    [renderCommandEncoder setVertexBuffer:self.bgVertexBuffer offset:0 atIndex:YSVideoMetalVertexInputIndexVertices];
+    
+    //设置转换矩阵
+    [renderCommandEncoder setFragmentBuffer:self.convertMatrix offset:0 atIndex:YSVideoMetalFragmentBufferIndexMatrix];
+    
+    if (texture) {
+        [renderCommandEncoder setFragmentTexture:texture atIndex:YSVideoMetalFragmentTextureIndexTextureY];
+    }
+    
+    [renderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+                      vertexStart:0
+                      vertexCount:self.bgNumVertices];
+}
+
 - (void)setupVertexFunctionData:(id<MTLRenderCommandEncoder>)renderCommandEncoder
 {
     //设置顶点数据和纹理坐标
@@ -374,52 +472,36 @@ extern vector_float3 kColorConversion601FullRangeOffset;
  
 
 //如果图像缓冲区是平面的，则为映射纹理数据的平面索引。对于非平面图像缓冲区忽
+- (id<MTLTexture>)getTextureFromPixelBufferRef:(CVPixelBufferRef)pixelBufferRef
+                                  planeIndex:(size_t)planeIndex
+                                 pixelFormat:(MTLPixelFormat)pixelFormat
+{
+    //设置yuv纹理数据
+    if (pixelBufferRef == NULL) {
+        return nil;
+    }
+    id<MTLTexture> texture = [YSVideoMetalUtils getTextureFromPixelBuffer:pixelBufferRef
+                                             planeIndex:planeIndex
+                                            pixelFormat:pixelFormat
+                                                 device:self.device textureCache:self.textureCache];
+    return texture;
+}
+
+//如果图像缓冲区是平面的，则为映射纹理数据的平面索引。对于非平面图像缓冲区忽
 - (id<MTLTexture>)getTextureFromSampleBuffer:(CMSampleBufferRef)sampleBuffer
                                   planeIndex:(size_t)planeIndex
                                  pixelFormat:(MTLPixelFormat)pixelFormat
 {
     //设置yuv纹理数据
     CVPixelBufferRef pixelBufferRef = CMSampleBufferGetImageBuffer(sampleBuffer);
-#if TARGET_OS_SIMULATOR || TARGET_MACOS
-    if(CVPixelBufferLockBaseAddress(pixelBufferRef, 0) != kCVReturnSuccess)
-       {
-           return  nil;
-       }
-        size_t width = CVPixelBufferGetWidthOfPlane(pixelBufferRef, planeIndex);
-        size_t height = CVPixelBufferGetHeightOfPlane(pixelBufferRef, planeIndex);
-       if (width == 0 || height == 0) {
-           return nil;
-       }
-       MTLTextureDescriptor *descriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
-                                                                                             width:width
-                                                                                            height:height
-                                                                                         mipmapped:NO];
-    
-  
-       descriptor.usage = (MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite | MTLTextureUsageRenderTarget);
-       id<MTLTexture> texture = [self.device newTextureWithDescriptor:descriptor];
-       MTLRegion region = MTLRegionMake2D(0, 0, width, height);
-       [texture replaceRegion:region
-                  mipmapLevel:0
-                    withBytes:CVPixelBufferGetBaseAddressOfPlane(pixelBufferRef, planeIndex)
-                  bytesPerRow:CVPixelBufferGetBytesPerRowOfPlane(pixelBufferRef,planeIndex)];
-       return texture;
-#else
-    //    //y纹理
-        id<MTLTexture> texture = nil;
-        size_t width = CVPixelBufferGetWidthOfPlane(pixelBufferRef, planeIndex);
-        size_t height = CVPixelBufferGetHeightOfPlane(pixelBufferRef, planeIndex);
-        CVMetalTextureRef textureRef = NULL;
-        CVReturn status =  CVMetalTextureCacheCreateTextureFromImage(NULL, _textureCache, pixelBufferRef, NULL, pixelFormat, width, height, planeIndex, &textureRef);
-        if (status == kCVReturnSuccess) {
-            texture = CVMetalTextureGetTexture(textureRef);
-            CFRelease(textureRef);
-            textureRef = NULL;
-        }
-        CVMetalTextureCacheFlush(_textureCache, 0);
-        pixelBufferRef = NULL;
-        return texture;
-#endif
+    if (pixelBufferRef == NULL) {
+        return nil;
+    }
+    id<MTLTexture> texture = [YSVideoMetalUtils getTextureFromPixelBuffer:pixelBufferRef
+                                             planeIndex:planeIndex
+                                            pixelFormat:pixelFormat
+                                                 device:self.device textureCache:self.textureCache];
+    return texture;
 }
  
 - (id<MTLRenderPipelineState>)mergeRenderPipelineState
@@ -456,12 +538,81 @@ extern vector_float3 kColorConversion601FullRangeOffset;
         renderPipelineDescriptor.vertexFunction = vertexFunction;
         renderPipelineDescriptor.fragmentFunction = fragmentFunction;
         renderPipelineDescriptor.colorAttachments[0].pixelFormat = _mtkView.colorPixelFormat;
+        [renderPipelineDescriptor.colorAttachments[0] setBlendingEnabled:YES];
+        renderPipelineDescriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+        renderPipelineDescriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+        renderPipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+        renderPipelineDescriptor.colorAttachments[0].sourceAlphaBlendFactor =  MTLBlendFactorSourceAlpha;
+        renderPipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+        renderPipelineDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+        renderPipelineDescriptor.colorAttachments[0].pixelFormat = _mtkView.colorPixelFormat;
         _defaultRenderPipelineState = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor error:nil];
     }
     return _defaultRenderPipelineState;
 }
 
+- (id<MTLRenderPipelineState>)bgRenderPipelineState
+{
+    if (!_bgRenderPipelineState) {
+        id<MTLLibrary> library = [_device newLibraryWithFile:[self metalFilePath] error:nil];
+        id<MTLFunction> vertexFunction = [library newFunctionWithName:@"bgVertexShader"];
+        id<MTLFunction> fragmentFunction = [library newFunctionWithName:@"bgFragmentSharder"];
+        
+        MTLRenderPipelineDescriptor *renderPipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        renderPipelineDescriptor.vertexFunction = vertexFunction;
+        renderPipelineDescriptor.fragmentFunction = fragmentFunction;
+        renderPipelineDescriptor.colorAttachments[0].pixelFormat = _mtkView.colorPixelFormat;
+        _bgRenderPipelineState = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor error:nil];
+    }
+    return _bgRenderPipelineState;
+}
 
+- (CVPixelBufferRef)syszuxPixelBufferFromUIImage:(UIImage *)originImage {
+    CGImageRef image = originImage.CGImage;
+    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+                             [NSNumber numberWithBool:YES], kCVPixelBufferCGImageCompatibilityKey,
+                             [NSNumber numberWithBool:YES], kCVPixelBufferCGBitmapContextCompatibilityKey,
+                             nil];
+
+    CVPixelBufferRef pxbuffer = NULL;
+    CGFloat frameWidth = CGImageGetWidth(image);
+    CGFloat frameHeight = CGImageGetHeight(image);
+    CVReturn status = CVPixelBufferCreate(kCFAllocatorDefault,
+                                          frameWidth,
+                                          frameHeight,
+                                          kCVPixelFormatType_32ARGB,
+                                          (__bridge CFDictionaryRef) options,
+                                          &pxbuffer);
+
+    NSParameterAssert(status == kCVReturnSuccess && pxbuffer != NULL);
+
+    CVPixelBufferLockBaseAddress(pxbuffer, 0);
+    void *pxdata = CVPixelBufferGetBaseAddress(pxbuffer);
+    NSParameterAssert(pxdata != NULL);
+
+    CGColorSpaceRef rgbColorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(pxdata,
+                                                 frameWidth,
+                                                 frameHeight,
+                                                 8,
+                                                 CVPixelBufferGetBytesPerRow(pxbuffer),
+                                                 rgbColorSpace,
+                                                 (CGBitmapInfo)kCGImageAlphaNoneSkipFirst);
+    NSParameterAssert(context);
+    CGContextConcatCTM(context, CGAffineTransformIdentity);
+    CGContextDrawImage(context, CGRectMake(0,
+                                           0,
+                                           frameWidth,
+                                           frameHeight),
+                       image);
+    CGColorSpaceRelease(rgbColorSpace);
+    CGContextRelease(context);
+
+    CVPixelBufferUnlockBaseAddress(pxbuffer, 0);
+    return pxbuffer;
+}
+ 
+ 
 @end
 
 

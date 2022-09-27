@@ -111,7 +111,7 @@
     
     _effectInfo = effectInfo;
     
-    if (effectInfo) {
+    if (effectInfo && effectInfo.isEffect) {
         self.isEffectVideo = YES;
     } else {
         self.isEffectVideo = NO;
