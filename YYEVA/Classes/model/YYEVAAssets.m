@@ -153,7 +153,6 @@
         _audioPlayer = nil;
     } else {
         self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:self.filePath] error:nil];
-        self.audioPlayer.delegate = self;
     }
     
     NSDictionary *outputSettings = @{
@@ -269,7 +268,6 @@
 {
     [self clear];
     
-    
     CFRelease(self->_sampleBufferQueue);
     self->_sampleBufferQueue = NULL;
     if (self.audioPlayer && [self.audioPlayer isPlaying]) {
@@ -292,13 +290,12 @@
     if ([_audioPlayer isPlaying]) {
         [_audioPlayer pause];
     }
-    
+    __weak typeof(self) weakself = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.01 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        
-        NSLog(@"---%@",_audioPlayer);
-        _audioPlayer.currentTime = 0.0f;
-        [_audioPlayer prepareToPlay];
-        [_audioPlayer play];
+         
+        weakself.audioPlayer.currentTime = 0.0f;
+        [weakself.audioPlayer prepareToPlay];
+        [weakself.audioPlayer play];
     });
     
 }
@@ -308,12 +305,6 @@
     [self tryPlayAudio];
     [self loadVideo];
 }
-
-- (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag
-{
-    NSLog(@"---finish---");
-    [player pause];
-    player.currentTime = 0;
-}
+ 
  
 @end
