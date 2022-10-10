@@ -50,6 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)tryPlayAudio;
 
+- (void)reload;
 
 @end
 

@@ -22,6 +22,7 @@
 @property (nonatomic, strong) NSMutableDictionary *textKeys;
 @property (nonatomic, copy)   NSString *bgImageUrl;
 @property (nonatomic, assign) UIViewContentMode bgContentMode;
+@property (nonatomic, assign) NSInteger repeatCount;
 @end
 
 @implementation YYEVAPlayer
@@ -31,6 +32,7 @@
     if (self = [super init]) {
         self.backgroundColor = [UIColor clearColor];
         self.mode = YYEVAContentMode_ScaleAspectFit;
+        self.repeatCount = 1;
     }
     return self;
 }
@@ -59,8 +61,13 @@
 //4.开始播放
 - (void)play:(NSString *)url
 {
+    [self play:url repeatCount:1];
+}
+
+- (void)play:(NSString *)fileUrl repeatCount:(NSInteger)repeatCount
+{
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self playWithFileUrl:url];
+        [self playWithFileUrl:fileUrl repeatCount:repeatCount];
     });
 }
 
@@ -86,8 +93,9 @@
     }
 }
 
-- (void)playWithFileUrl:(NSString *)url
+- (void)playWithFileUrl:(NSString *)url repeatCount:(NSInteger)repeatCount
 {
+    self.repeatCount = repeatCount;
     YYEVAAssets *assets = [[YYEVAAssets alloc] initWithFilePath:url];
     [self switchAssets:assets];
     //包含描述信息 走的是maskRender
@@ -107,7 +115,15 @@
     __weak typeof(self) weakSelf = self;
        
     self.videoRender.completionPlayBlock = ^{
-        [weakSelf endPlay];
+        weakSelf.repeatCount--;
+        if (weakSelf.repeatCount > 0) {
+//            [weakSelf playWithFileUrl:url repeatCount:weakSelf.repeatCount];
+            [weakSelf.assets reload];
+        } else {
+            weakSelf.mtkView.paused = YES;
+            [weakSelf endPlay];
+        }
+        
     };
    [self.videoRender playWithAssets:assets];
    [self.assets tryPlayAudio];
@@ -117,6 +133,8 @@
 - (void)endPlay
 {
     [self stopAnimation];
+    [self.imgUrlKeys removeAllObjects];
+    [self.textKeys removeAllObjects];
     if ([self.delegate respondsToSelector:@selector(evaPlayerDidCompleted:)]) {
         [self.delegate evaPlayerDidCompleted:self];
     }
@@ -143,8 +161,6 @@
     self.mtkView = nil;
     [self.assets clear];
     self.assets = nil;
-    [self.imgUrlKeys removeAllObjects];
-    [self.textKeys removeAllObjects];
     self.videoRender = nil;
 }
  

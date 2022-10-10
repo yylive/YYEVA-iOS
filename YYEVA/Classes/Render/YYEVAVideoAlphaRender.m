@@ -218,7 +218,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
         [commandBuffer commit];
     } else {
         if (![self.playAssets hasNextSampleBuffer]) {
-            self.mtkView.paused = YES;
+//            self.mtkView.paused = YES;
             if (self.completionPlayBlock) {
                 self.completionPlayBlock();
             }

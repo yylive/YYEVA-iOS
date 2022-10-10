@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 //播放
 - (void)play:(NSString *)fileUrl;
+// 0表示一直循环播放
+- (void)play:(NSString *)fileUrl repeatCount:(NSInteger)repeatCount;
 - (void)pause;
 - (void)stopAnimation;
 

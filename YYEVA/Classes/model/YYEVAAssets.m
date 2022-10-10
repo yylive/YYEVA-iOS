@@ -13,7 +13,7 @@
 
 #define kSampleBufferQueueMaxCapacity 3
 
-@interface YYEVAAssets()
+@interface YYEVAAssets() <AVAudioPlayerDelegate>
 {
     CFMutableArrayRef _sampleBufferQueue;
 }
@@ -153,6 +153,7 @@
         _audioPlayer = nil;
     } else {
         self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:self.filePath] error:nil];
+        self.audioPlayer.delegate = self;
     }
     
     NSDictionary *outputSettings = @{
@@ -288,6 +289,31 @@
         return;
     }
     
-    [_audioPlayer play];
+    if ([_audioPlayer isPlaying]) {
+        [_audioPlayer pause];
+    }
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.01 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        
+        NSLog(@"---%@",_audioPlayer);
+        _audioPlayer.currentTime = 0.0f;
+        [_audioPlayer prepareToPlay];
+        [_audioPlayer play];
+    });
+    
 }
+
+- (void)reload
+{
+    [self tryPlayAudio];
+    [self loadVideo];
+}
+
+- (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag
+{
+    NSLog(@"---finish---");
+    [player pause];
+    player.currentTime = 0;
+}
+ 
 @end
