@@ -54,7 +54,11 @@ void normalVerticesWithFillMod(CGRect rect, CGSize containerSize, CGSize picSize
     float widthScaling = 1.0;
     CGSize drawableSize = trueSize;
     CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
-    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(containerSize, bounds);
+    CGRect insetRect = CGRectZero;
+    CGFloat maxRatio = MAX( drawableSize.width / containerSize.width , drawableSize.height / containerSize.height);
+    CGFloat lowRatio = MIN( drawableSize.width / containerSize.width , drawableSize.height / containerSize.height);
+    CGFloat realWidth;
+    CGFloat realHeight;
     switch (videoFillMode) {
         case YYEVAContentMode_ScaleToFill:
             heightScaling = 1.0;
@@ -62,25 +66,36 @@ void normalVerticesWithFillMod(CGRect rect, CGSize containerSize, CGSize picSize
             break;
 
         case YYEVAContentMode_ScaleAspectFit:
-            widthScaling = insetRect.size.width / drawableSize.width;
-            heightScaling = insetRect.size.height / drawableSize.height;
+            realWidth = lowRatio * containerSize.width;
+            realHeight = lowRatio * containerSize.height;
+            widthScaling = realWidth / drawableSize.width;
+            heightScaling = realHeight / drawableSize.height;
+//            insetRect = AVMakeRectWithAspectRatioInsideRect(containerSize, bounds);
+//            widthScaling = drawableSize.width / insetRect.size.width;//MIN( ,   drawableSize.height / insetRect.size.height) ;
+//            heightScaling = drawableSize.height / insetRect.size.height;//MIN( drawableSize.width / insetRect.size.width ,   drawableSize.height / insetRect.size.height) ;
+
             break;
 
         case YYEVAContentMode_ScaleAspectFill:
-            widthScaling = drawableSize.height / insetRect.size.height;
-            heightScaling = drawableSize.width / insetRect.size.width;
+            realWidth = maxRatio * containerSize.width;
+            realHeight = maxRatio * containerSize.height;
+            widthScaling = realWidth / drawableSize.width;
+            heightScaling = realHeight / drawableSize.height;
             break;
     }
+  
      
 //    rect
 //    rect = CGRectMake(rect.origin.x * widthScaling, rect.origin.y * heightScaling, rect.size.width, rect.size.height);
 //    widthScaling = 1;
 //    heightScaling = 1;
     float originX, originY, width, height;
+
     originX = (-1+2*rect.origin.x/containerSize.width) * widthScaling;
-    originY = (1-2*rect.origin.y/containerSize.height) * heightScaling ;
+    originY = (1-2*rect.origin.y/containerSize.height) * heightScaling;
     width = (2*rect.size.width/containerSize.width) * widthScaling;
     height = (2*rect.size.height/containerSize.height) * heightScaling;
+
       
     float tempVertices[] = {
             originX, originY,0.0, 1.0,

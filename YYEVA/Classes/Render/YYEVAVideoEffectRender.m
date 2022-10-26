@@ -165,28 +165,28 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     widthScaling =   drawableSize.width / insetRect.size.width;
     heightScaling =   drawableSize.height / insetRect.size.height;
     
+    CGFloat maxRatio = MAX( drawableSize.width / size.width , drawableSize.height / size.height);
+    CGFloat lowRatio = MIN( drawableSize.width / size.width , drawableSize.height / size.height);
+    
     CGFloat wRatio = 1.0;
     CGFloat hRatio = 1.0;
     
+    CGFloat realWidth = 1.0;
+    CGFloat realHeight = 1.0;
+    
     switch (mode) {
         case UIViewContentModeScaleAspectFit:
-            if (widthScaling > heightScaling) {
-                hRatio = heightScaling;
-                wRatio = insetRect.size.width * hRatio / drawableSize.width;
-            } else {
-                wRatio = widthScaling;
-                hRatio = insetRect.size.height * wRatio / drawableSize.height;
-            }
+            realWidth = lowRatio * size.width;
+            realHeight = lowRatio * size.height;
+            wRatio = realWidth / drawableSize.width;
+            hRatio = realHeight / drawableSize.height;
             break;
         case UIViewContentModeScaleAspectFill:
             
-            if (widthScaling < heightScaling) {
-                hRatio = heightScaling;
-                wRatio = insetRect.size.width * hRatio / drawableSize.width;
-            } else {
-                wRatio = widthScaling;
-                hRatio = insetRect.size.height * wRatio / drawableSize.height;
-            }
+            realWidth = maxRatio * size.width;
+            realHeight = maxRatio * size.height;
+            wRatio = realWidth / drawableSize.width;
+             hRatio = realHeight / drawableSize.height;
             break;
         default:
             wRatio = 1.0;
