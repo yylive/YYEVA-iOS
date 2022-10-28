@@ -10,6 +10,7 @@
 #include "YYEVAVideoShareTypes.h"
 #import "YYEVAEffectInfo.h"
 #import "YSVideoMetalUtils.h"
+#import <UIKit/UIImageView.h>
 
 extern matrix_float3x3 kColorConversion601FullRangeMatrix;
 extern vector_float3 kColorConversion601FullRangeOffset;
@@ -157,14 +158,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
                   drawableSize:(CGSize)drawableSize
                       fillMode:(UIViewContentMode)mode
 {
-    float heightScaling = 1.0;
-    float widthScaling = 1.0;
-    CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
-    CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(size, bounds);
-    
-    widthScaling =   drawableSize.width / insetRect.size.width;
-    heightScaling =   drawableSize.height / insetRect.size.height;
-    
+    drawableSize = CGSizeMake(drawableSize.width * 2, drawableSize.height * 2);
     CGFloat maxRatio = MAX( drawableSize.width / size.width , drawableSize.height / size.height);
     CGFloat lowRatio = MIN( drawableSize.width / size.width , drawableSize.height / size.height);
     
@@ -376,7 +370,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
             CGSize videoSize = self.playAssets.size;
             CGSize size = self.playAssets.effectInfo.rgbFrame.size;
             [encoder setRenderPipelineState:self.mergeRenderPipelineState];
-            id<MTLTexture> sourceTexture = [self loadTextureWithImage:mergeInfo.src.sourceImage device:_device]; //图片纹理
+            
             //构造YSVideoMetalElementVertex：「
             //    vector_float4 positon;  4
             //    vector_float2 sourceTextureCoordinate; 2
@@ -384,7 +378,22 @@ extern vector_float3 kColorConversion601FullRangeOffset;
             // 」
             id<MTLBuffer> vertexBuffer = [mergeInfo vertexBufferWithContainerSize:size
                                                                 maskContianerSize:videoSize
-                                                                           device:self.device fillMode:self.fillMode trueSize:self.mtkView.bounds.size];
+                                                                           device:self.device
+                                                                         fillMode:self.fillMode
+                                                                         trueSize:self.mtkView.bounds.size];
+            
+            id<MTLTexture> sourceTexture = mergeInfo.src.texture;
+            if (!sourceTexture) {
+                sourceTexture =  [self loadTextureWithImage:mergeInfo.src.sourceImage
+                                                     device:_device
+                                                   trueSize:self.mtkView.bounds.size
+                                              containerSize:size
+                                              videoFillMode:self.fillMode
+                                                   fillMode:mergeInfo.src.fillMode]; //图片纹理
+                mergeInfo.src.texture = sourceTexture;
+            }
+            
+            
             id<MTLBuffer> colorParamsBuffer = mergeInfo.src.colorParamsBuffer;
             id<MTLBuffer> convertMatrix = self.convertMatrix;
             if (!sourceTexture || !vertexBuffer || !convertMatrix) {
@@ -415,6 +424,94 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     if (@available(iOS 10.0, *)) {
         MTKTextureLoader *loader = [[MTKTextureLoader alloc] initWithDevice:device];
         NSError *error = nil;
+        
+        
+         
+        
+        id<MTLTexture> texture = [loader newTextureWithCGImage:image.CGImage options:@{MTKTextureLoaderOptionOrigin : MTKTextureLoaderOriginFlippedVertically} error:&error];
+        if (!texture || error) {
+            return nil;
+        }
+        return texture;
+    }
+    return nil;
+}
+ 
+
+- (id<MTLTexture>)loadTextureWithImage:(UIImage *)image
+                                device:(id<MTLDevice>)device
+                              trueSize:(CGSize)trueSize
+                         containerSize:(CGSize)containerSize
+                         videoFillMode:(YYEVAFillMode)videoFillMode
+                              fillMode:(YYEVAEffectSourceImageFillMode)fillMode{
+    
+    if (!image) {
+        return nil;
+    }
+    if (@available(iOS 10.0, *)) {
+        MTKTextureLoader *loader = [[MTKTextureLoader alloc] initWithDevice:device];
+        NSError *error = nil;
+        //trueSize 传的是pt  设计师计算的是两倍的像素
+        CGSize drawableSize = CGSizeMake(trueSize.width * 2, trueSize.height * 2);
+        CGFloat maxRatio = MAX( drawableSize.width / containerSize.width , drawableSize.height / containerSize.height);
+        CGFloat lowRatio = MIN( drawableSize.width / containerSize.width , drawableSize.height / containerSize.height);
+        CGFloat realWidth = 0.0;
+        CGFloat realHeight = 0.0;
+        
+        switch (videoFillMode) {
+            case YYEVAContentMode_ScaleToFill:
+                realWidth =   containerSize.width;
+                realHeight =  containerSize.height;
+                break;
+
+            case YYEVAContentMode_ScaleAspectFit:
+                realWidth = lowRatio * containerSize.width;
+                realHeight = lowRatio * containerSize.height;
+                break;
+
+            case YYEVAContentMode_ScaleAspectFill:
+                realWidth = maxRatio * containerSize.width;
+                realHeight = maxRatio * containerSize.height;
+                break;
+        }
+        
+        UIImageView *imgView;
+          
+        switch (fillMode) {
+            case YYEVAEffectSourceImageFillModeAspectFit:
+            {
+                imgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, realWidth, realHeight)];
+                imgView.contentMode = UIViewContentModeScaleAspectFit;
+                imgView.image = image;
+                imgView.clipsToBounds = YES;
+                UIGraphicsBeginImageContextWithOptions(imgView.frame.size, NO, [UIScreen mainScreen].scale);
+                [imgView.layer renderInContext:UIGraphicsGetCurrentContext()];
+                UIImage *snapshotImage = UIGraphicsGetImageFromCurrentImageContext();
+                UIGraphicsEndImageContext();
+                image = snapshotImage;
+            }
+               
+                break;
+
+            case YYEVAEffectSourceImageFillModeAspectFill:
+            {
+                imgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, realWidth, realHeight)];
+                imgView.contentMode = UIViewContentModeScaleAspectFill;
+                imgView.image = image;
+                imgView.clipsToBounds = YES;
+                UIGraphicsBeginImageContextWithOptions(imgView.frame.size, NO, [UIScreen mainScreen].scale);
+                [imgView.layer renderInContext:UIGraphicsGetCurrentContext()];
+                UIImage *snapshotImage = UIGraphicsGetImageFromCurrentImageContext();
+                UIGraphicsEndImageContext();
+                image = snapshotImage;
+            }
+                
+                break;
+            default:
+                break;
+        }
+        
+          
         id<MTLTexture> texture = [loader newTextureWithCGImage:image.CGImage options:@{MTKTextureLoaderOptionOrigin : MTKTextureLoaderOriginFlippedVertically} error:&error];
         if (!texture || error) {
             return nil;

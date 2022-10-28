@@ -48,17 +48,23 @@ void generatorVertices(CGRect rect, CGSize containerSize, float vertices[16]) {
  
  
 
-void normalVerticesWithFillMod(CGRect rect, CGSize containerSize, CGSize picSize,YYEVAEffectSourceImageFillMode fillMode, float vertices[16],YYEVAFillMode videoFillMode,CGSize trueSize) {
-    //trueSize
+void normalVerticesWithFillMod(CGRect rect,
+                               CGSize containerSize,
+                               CGSize picSize,
+                               YYEVAEffectSourceImageFillMode fillMode,
+                               float vertices[16],
+                               YYEVAFillMode videoFillMode,
+                               CGSize trueSize) {
+    //trueSize 传的是pt  设计师计算的是两倍的像素
+    trueSize = CGSizeMake(trueSize.width * 2, trueSize.height * 2);
     float heightScaling = 1.0;
     float widthScaling = 1.0;
-    CGSize drawableSize = trueSize;
-    CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
-    CGRect insetRect = CGRectZero;
+    CGSize drawableSize = trueSize; 
     CGFloat maxRatio = MAX( drawableSize.width / containerSize.width , drawableSize.height / containerSize.height);
     CGFloat lowRatio = MIN( drawableSize.width / containerSize.width , drawableSize.height / containerSize.height);
-    CGFloat realWidth;
-    CGFloat realHeight;
+    CGFloat realWidth = 0.0;
+    CGFloat realHeight = 0.0;
+    
     switch (videoFillMode) {
         case YYEVAContentMode_ScaleToFill:
             heightScaling = 1.0;
@@ -70,10 +76,6 @@ void normalVerticesWithFillMod(CGRect rect, CGSize containerSize, CGSize picSize
             realHeight = lowRatio * containerSize.height;
             widthScaling = realWidth / drawableSize.width;
             heightScaling = realHeight / drawableSize.height;
-//            insetRect = AVMakeRectWithAspectRatioInsideRect(containerSize, bounds);
-//            widthScaling = drawableSize.width / insetRect.size.width;//MIN( ,   drawableSize.height / insetRect.size.height) ;
-//            heightScaling = drawableSize.height / insetRect.size.height;//MIN( drawableSize.width / insetRect.size.width ,   drawableSize.height / insetRect.size.height) ;
-
             break;
 
         case YYEVAContentMode_ScaleAspectFill:
@@ -83,25 +85,57 @@ void normalVerticesWithFillMod(CGRect rect, CGSize containerSize, CGSize picSize
             heightScaling = realHeight / drawableSize.height;
             break;
     }
-  
-     
-//    rect
-//    rect = CGRectMake(rect.origin.x * widthScaling, rect.origin.y * heightScaling, rect.size.width, rect.size.height);
-//    widthScaling = 1;
-//    heightScaling = 1;
+   
     float originX, originY, width, height;
+     
+    
+    
+    //picSize
+    CGFloat picW = picSize.width;
+    CGFloat picH = picSize.height;
+    
+    CGFloat widthPicScaling = 1.0;
+    CGFloat heightPicScaling = 1.0;
+     
+    CGFloat lowPicRatio = MIN( realWidth / picW , realHeight / picH);
+    CGFloat highPicRatio = MAX( realWidth / picW , realHeight / picH);
+    
+     
+    fillMode = YYEVAEffectSourceImageFillModeAspectFit;
+    switch (fillMode) {
+        case YYEVAEffectSourceImageFillModeScaleFill:
+            widthPicScaling = 1.0;
+            heightPicScaling = 1.0;
+            break;
 
-    originX = (-1+2*rect.origin.x/containerSize.width) * widthScaling;
-    originY = (1-2*rect.origin.y/containerSize.height) * heightScaling;
-    width = (2*rect.size.width/containerSize.width) * widthScaling;
-    height = (2*rect.size.height/containerSize.height) * heightScaling;
+        case YYEVAEffectSourceImageFillModeAspectFit:
+            realWidth = lowPicRatio * picW;
+            realHeight = lowPicRatio * picH;
+            widthPicScaling = realWidth / picW;
+            heightPicScaling = realHeight / picH;
+            break;
+
+        case YYEVAEffectSourceImageFillModeAspectFill:
+            realWidth = highPicRatio * picW;
+            realHeight = highPicRatio * picH;
+            widthPicScaling = realWidth / picW;
+            heightPicScaling = realHeight / picH;
+            break;
+    }
+     
+
+    originX = (-1+2*rect.origin.x/containerSize.width) * widthScaling ;
+    originY = (1-2*rect.origin.y/containerSize.height) * heightScaling ;
+    width = (2 * rect.size.width/containerSize.width) * widthScaling ;
+    height = (2 * rect.size.height/containerSize.height) * heightScaling ;
 
       
     float tempVertices[] = {
-            originX, originY,0.0, 1.0,
-            originX,originY-height,0.0,1.0,
-            originX+width,originY,0.0,1.0 ,
-            originX+width,originY-height,0.0, 1.0};
+        originX, originY,0.0, 1.0,
+        originX,originY-height,0.0,1.0,
+        originX+width,originY,0.0,1.0 ,
+        originX+width,originY-height,0.0, 1.0};
+//    
     replaceArrayElements(vertices, tempVertices, 16);
 }
 
