@@ -71,6 +71,14 @@
             if (source.type == YYEVAEffectSourceTypeImage) {
                 source.sourceImage = [UIImage imageWithContentsOfFile:content];
             } else if (source.type == YYEVAEffectSourceTypeText) {
+                
+                NSDictionary *textDict = (NSDictionary *)content;
+                NSString *text = [textDict objectForKey:@"content"];
+                NSTextAlignment alignment = source.alignment;
+                //如果业务有传，使用业务的数据
+                if ([textDict objectForKey:@"align"] != nil) {
+                    alignment = [[textDict objectForKey:@"align"] integerValue];
+                }
                 UIColor *color = [UIColor whiteColor];
                 if (source.fontColor) {
                     const char *cStr = [source.fontColor cStringUsingEncoding:NSASCIIStringEncoding];
@@ -80,10 +88,11 @@
                     float b = (float)(x & 0x000000FF) / 255.0f;
                     color = [UIColor colorWithRed:r green:g blue:b alpha:1.0f];
                 }
-                source.sourceImage = [YSVideoMetalUtils imageWithText:content
+                source.sourceImage = [YSVideoMetalUtils imageWithText:text
                                                             textColor:color
                                                              fontSize:source.fontSize
-                                                             rectSize:CGSizeMake(source.width, source.height)];
+                                                             rectSize:CGSizeMake(source.width, source.height)
+                                                                align:alignment];
             }
         }
     }];

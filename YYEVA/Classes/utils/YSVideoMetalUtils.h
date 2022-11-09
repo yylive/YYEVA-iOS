@@ -28,7 +28,8 @@ extern "C" {
 + (UIImage *)imageWithText:(NSString *)text
                      textColor:(UIColor *)textColor
                       fontSize:(float)fontSize
-                      rectSize:(CGSize)rectSize;
+                      rectSize:(CGSize)rectSize
+                     align:(NSTextAlignment)align;
 
 + (id<MTLTexture>)getTextureFromPixelBuffer:(CVPixelBufferRef)pixelBufferRef
                                   planeIndex:(size_t)planeIndex

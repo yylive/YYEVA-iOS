@@ -46,7 +46,14 @@
  
 - (void)setText:(NSString *)text forKey:(NSString *)key
 {
-    [self.textKeys setObject:text forKey:key];
+    if (text.length <= 0) return;
+    [self.textKeys setObject:@{@"content":text} forKey:key];
+}
+
+- (void)setText:(NSString *)text forKey:(NSString *)key textAlign:(NSTextAlignment)textAlign
+{
+    if (text.length <= 0) return;
+    [self.textKeys setObject:@{@"content":text,@"align":@(textAlign)} forKey:key];
 }
 
 - (void)setImageUrl:(NSString *)imgUrl forKey:(NSString *)key

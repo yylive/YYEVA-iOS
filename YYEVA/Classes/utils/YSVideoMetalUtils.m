@@ -185,6 +185,7 @@ void mask_textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coord
                      textColor:(UIColor *)textColor
                       fontSize:(float)fontSize
                       rectSize:(CGSize)rectSize
+                         align:(NSTextAlignment)align
 {
     CheckReturnNil((text.length != 0));
     
@@ -195,7 +196,7 @@ void mask_textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coord
     CGSize textSize = CGSizeZero;
     UIFont *font = [self calculatorFontWithText:text rect:rect designedSize:fontSize fontName:nil bold:bold textSize:&textSize needFitWidth:NO];
     NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
-    paragraphStyle.alignment = NSTextAlignmentCenter;
+    paragraphStyle.alignment = align;
     paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
     NSDictionary *attr = @{NSFontAttributeName:font, NSParagraphStyleAttributeName:paragraphStyle, NSForegroundColorAttributeName:textColor,NSBackgroundColorAttributeName:[UIColor clearColor]};
     UIGraphicsBeginImageContextWithOptions(rect.size, NO, [UIScreen mainScreen].scale);

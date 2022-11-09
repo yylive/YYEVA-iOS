@@ -121,6 +121,16 @@ CGRect getFrame(NSArray *arry)
             }
             _fontSize = fontSize;
             
+            NSString *align = [dict objectForKey:@"textAlign"];
+            _alignment = NSTextAlignmentCenter;
+            if ([align isEqualToString:@"center"]) {
+                _alignment = NSTextAlignmentCenter;
+            } else if ([align isEqualToString:@"left"]) {
+                _alignment = NSTextAlignmentLeft;
+            } else if ([align isEqualToString:@"right"]) {
+                _alignment = NSTextAlignmentRight;
+            }
+            
         } else if ([effectTypeStr isEqualToString:@"img"]) {
             _type = YYEVAEffectSourceTypeImage;
             NSString *scaleModeStr = [dict objectForKey:@"scaleMode"] ;

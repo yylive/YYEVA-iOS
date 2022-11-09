@@ -33,6 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //设置相关动态属性
 - (void)setText:(NSString *)text forKey:(NSString *)key;
+- (void)setText:(NSString *)text forKey:(NSString *)key textAlign:(NSTextAlignment)textAlign;
 - (void)setImageUrl:(NSString *)imgUrl forKey:(NSString *)key;
 
 //设置背景层

@@ -36,6 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 //文字类型的遮罩生效
 @property (nonatomic, copy,readonly) NSString *fontColor;
 @property (nonatomic, assign,readonly) float fontSize;
+@property (nonatomic, assign,readonly) NSTextAlignment alignment;
 //图片类型的遮罩生效
 @property (nonatomic, assign,readonly) YYEVAEffectSourceImageFillMode fillMode;
 
