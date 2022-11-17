@@ -158,17 +158,15 @@
         self.mtkView.frame = self.bounds;
     }
 }
- 
-
-
+  
 - (void)stopAnimation
 {
     [self pause];
     [self.mtkView removeFromSuperview];
-    self.mtkView = nil;
     [self.assets clear];
     self.assets = nil;
     self.videoRender = nil;
+    self.mtkView = nil;
 }
  
 - (void)pause

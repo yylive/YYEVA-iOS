@@ -204,20 +204,19 @@
         return;
     }
     
+    @synchronized (self) {
+        if (CFArrayGetCount(self->_sampleBufferQueue) > kSampleBufferQueueMaxCapacity) {
+            return;
+        }
+    }
+    
    dispatch_async(_readVideoBufferQueue, ^{
        do {
-           @synchronized (self) {
-               
-               if (CFArrayGetCount(self->_sampleBufferQueue) > kSampleBufferQueueMaxCapacity) {
-                   break;
-               }
+           CMSampleBufferRef sampleBufferRef = NULL;
+           if (self.reader.status == AVAssetReaderStatusReading) {
+               sampleBufferRef = [self.output copyNextSampleBuffer];
            }
            
-           if (self.reader.status != AVAssetReaderStatusReading) {
-               break;
-           }
-           
-           CMSampleBufferRef sampleBufferRef = [self.output copyNextSampleBuffer];
            if (sampleBufferRef) {
                @synchronized (self) {
                    CFArrayAppendValue(self->_sampleBufferQueue, sampleBufferRef);
@@ -228,7 +227,6 @@
            } else {
                break;
            }
-           
        } while (YES);
    });
 }
@@ -246,12 +244,12 @@
 {
    CMSampleBufferRef ref = NULL;
    @synchronized (self) {
-       if (CFArrayGetCount(self->_sampleBufferQueue) > 0) {
-           
-           ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, 0);
-           CFArrayRemoveValueAtIndex(self->_sampleBufferQueue, 0);
-            
-           _frameIndex++;
+       if (self->_sampleBufferQueue) {
+           if (CFArrayGetCount(self->_sampleBufferQueue) > 0) {
+               ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, 0);
+               CFArrayRemoveValueAtIndex(self->_sampleBufferQueue, 0);
+               _frameIndex++;
+           }
        }
    }
    [self readVideoTracksIntoQueueIfNeed];
@@ -261,34 +259,30 @@
 
 - (void)clear
 {
-    dispatch_sync(_readVideoBufferQueue, ^{
-        if (self.reader && self.reader.status == AVAssetReaderStatusReading) {
-            [self.reader cancelReading];
-        }
-        
-        if (self->_sampleBufferQueue == NULL) {
-            return;
-        }
-        
-        NSInteger count = CFArrayGetCount(self->_sampleBufferQueue);
-        if (count > 0) {
-            for (NSInteger i = 0; i < count; i++) {
-                CMSampleBufferRef ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, i
-                                                                                  );
-                if (ref) {
-                    CMSampleBufferInvalidate(ref);
-                    CFRelease(ref);
-                    ref = NULL;
-                }
+    if (self.reader && self.reader.status == AVAssetReaderStatusReading) {
+        [self.reader cancelReading];
+    }
+    
+    if (self->_sampleBufferQueue == NULL) {
+        return;
+    }
+    
+    NSInteger count = CFArrayGetCount(self->_sampleBufferQueue);
+    if (count > 0) {
+        for (NSInteger i = 0; i < count; i++) {
+            CMSampleBufferRef ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, i);
+            if (ref) {
+                CMSampleBufferInvalidate(ref);
+                CFRelease(ref);
+                ref = NULL;
             }
         }
-        CFArrayRemoveAllValues(self->_sampleBufferQueue);
-    });
+    }
+    CFArrayRemoveAllValues(self->_sampleBufferQueue);
 }
 
 - (void)dealloc
 {
-    [self clear];
     if (self->_sampleBufferQueue!=NULL) {
         CFRelease(self->_sampleBufferQueue);
     }
