@@ -200,6 +200,10 @@
 
 - (void)readVideoTracksIntoQueueIfNeed
 {
+    if (self.reader.status != AVAssetReaderStatusReading) {
+        return;
+    }
+    
    dispatch_async(_readVideoBufferQueue, ^{
        do {
            @synchronized (self) {
@@ -257,27 +261,37 @@
 
 - (void)clear
 {
-    [self.reader cancelReading];
-    NSInteger count = CFArrayGetCount(self->_sampleBufferQueue);
-    if (count > 0) {
-        for (NSInteger i = 0; i < count; i++) {
-            CMSampleBufferRef ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, i
-                                                                              );
-            if (ref) {
-                CMSampleBufferInvalidate(ref);
-                CFRelease(ref);
-                ref = NULL;
+    dispatch_sync(_readVideoBufferQueue, ^{
+        if (self.reader && self.reader.status == AVAssetReaderStatusReading) {
+            [self.reader cancelReading];
+        }
+        
+        if (self->_sampleBufferQueue == NULL) {
+            return;
+        }
+        
+        NSInteger count = CFArrayGetCount(self->_sampleBufferQueue);
+        if (count > 0) {
+            for (NSInteger i = 0; i < count; i++) {
+                CMSampleBufferRef ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, i
+                                                                                  );
+                if (ref) {
+                    CMSampleBufferInvalidate(ref);
+                    CFRelease(ref);
+                    ref = NULL;
+                }
             }
         }
-    }
-    CFArrayRemoveAllValues(self->_sampleBufferQueue);
+        CFArrayRemoveAllValues(self->_sampleBufferQueue);
+    });
 }
 
 - (void)dealloc
 {
     [self clear];
-    
-    CFRelease(self->_sampleBufferQueue);
+    if (self->_sampleBufferQueue!=NULL) {
+        CFRelease(self->_sampleBufferQueue);
+    }
     self->_sampleBufferQueue = NULL;
     if (self.audioPlayer && [self.audioPlayer isPlaying]) {
         [self.audioPlayer stop];
