@@ -259,26 +259,33 @@
 
 - (void)clear
 {
-    if (self.reader && self.reader.status == AVAssetReaderStatusReading) {
-        [self.reader cancelReading];
-    }
-    
-    if (self->_sampleBufferQueue == NULL) {
-        return;
-    }
-    
-    NSInteger count = CFArrayGetCount(self->_sampleBufferQueue);
-    if (count > 0) {
-        for (NSInteger i = 0; i < count; i++) {
-            CMSampleBufferRef ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, i);
-            if (ref) {
-                CMSampleBufferInvalidate(ref);
-                CFRelease(ref);
-                ref = NULL;
+    //同步执行
+    dispatch_sync(_readVideoBufferQueue, ^{
+        if (self.reader && self.reader.status == AVAssetReaderStatusReading) {
+            [self.reader cancelReading];
+        }
+         
+        
+        if (self->_sampleBufferQueue == NULL) {
+            return;
+        }
+        
+        NSInteger count = CFArrayGetCount(self->_sampleBufferQueue);
+        if (count > 0) {
+            for (NSInteger i = 0; i < count; i++) {
+                CMSampleBufferRef ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, i);
+                if (ref) {
+                    CMSampleBufferInvalidate(ref);
+                    CFRelease(ref);
+                    ref = NULL;
+                }
             }
         }
-    }
-    CFArrayRemoveAllValues(self->_sampleBufferQueue);
+        CFArrayRemoveAllValues(self->_sampleBufferQueue);
+    });
+    
+    
+    
 }
 
 - (void)dealloc
