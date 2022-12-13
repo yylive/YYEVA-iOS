@@ -122,15 +122,18 @@
     __weak typeof(self) weakSelf = self;
        
     self.videoRender.completionPlayBlock = ^{
-        weakSelf.repeatCount--;
-        if (weakSelf.repeatCount > 0) {
+       if (repeatCount == 0) {
+    				[weakSelf.assets reload];
+    			} else {
+				    weakSelf.repeatCount--;
+				    if (weakSelf.repeatCount > 0) {
 //            [weakSelf playWithFileUrl:url repeatCount:weakSelf.repeatCount];
-            [weakSelf.assets reload];
-        } else {
-            weakSelf.mtkView.paused = YES;
-            [weakSelf endPlay];
-        }
-        
+						   [weakSelf.assets reload];
+				    } else {
+						   weakSelf.mtkView.paused = YES;
+						  [weakSelf endPlay];
+				   }
+			   }
     };
    [self.videoRender playWithAssets:assets];
    [self.assets tryPlayAudio];
