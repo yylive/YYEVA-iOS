@@ -23,6 +23,7 @@
 @property (nonatomic, copy)   NSString *bgImageUrl;
 @property (nonatomic, assign) UIViewContentMode bgContentMode;
 @property (nonatomic, assign) NSInteger repeatCount;
+@property (nonatomic, strong) NSTimer *timer;
 @end
 
 @implementation YYEVAPlayer
@@ -118,24 +119,44 @@
    self.mtkView.frame = self.bounds;
    self.mtkView.backgroundColor = [UIColor clearColor];
    self.mtkView.preferredFramesPerSecond = assets.preferredFramesPerSecond ;
-
+   self.mtkView.paused = YES;
+   self.mtkView.enableSetNeedsDisplay = false;
+   
     __weak typeof(self) weakSelf = self;
        
     self.videoRender.completionPlayBlock = ^{
+        [weakSelf.timer invalidate];
+        weakSelf.timer =  nil;
         weakSelf.repeatCount--;
         if (weakSelf.repeatCount > 0) {
 //            [weakSelf playWithFileUrl:url repeatCount:weakSelf.repeatCount];
             [weakSelf.assets reload];
         } else {
-            weakSelf.mtkView.paused = YES;
             [weakSelf endPlay];
         }
-        
     };
    [self.videoRender playWithAssets:assets];
    [self.assets tryPlayAudio];
+    NSTimeInterval per =  1.0 / assets.preferredFramesPerSecond;
+    [self timerEnd];
+    self.timer = [NSTimer timerWithTimeInterval:per target:self selector:@selector(timerDraw) userInfo:nil repeats:YES];
+    [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
+    [self.timer fire];
+    
 }
  
+- (void)timerDraw
+{
+    [self.mtkView draw];
+}
+
+- (void)timerEnd
+{
+    if(_timer) {
+        [_timer invalidate];
+        _timer = nil;
+    }
+}
 
 - (void)endPlay
 {
@@ -171,7 +192,7 @@
  
 - (void)pause
 {
-   self.mtkView.paused = YES;
+    [self timerEnd];
 }
 
 #pragma mark - get/set
