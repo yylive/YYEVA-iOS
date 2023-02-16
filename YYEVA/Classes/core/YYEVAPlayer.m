@@ -58,9 +58,19 @@
 
 - (void)setImageUrl:(NSString *)imgUrl forKey:(NSString *)key
 {
-    [self.imgUrlKeys setObject:imgUrl forKey:key];
+    if (imgUrl.length > 0 && key.length > 0) {
+        [self.imgUrlKeys setObject:imgUrl forKey:key];
+    }
+    
 }
 
+- (void)setImage:(UIImage *)image forKey:(NSString *)key
+{
+    if (image  && key.length > 0) {
+        [self.imgUrlKeys setObject:image forKey:key];
+    }
+    
+}
 
 //1.创建资源文件
 //2.解析资源文件

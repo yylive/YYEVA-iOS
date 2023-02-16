@@ -69,7 +69,11 @@
         id content = [weakSelf.businessEffects objectForKey:source.effect_tag];
         if (content) {
             if (source.type == YYEVAEffectSourceTypeImage) {
-                source.sourceImage = [UIImage imageWithContentsOfFile:content];
+                if ([content isKindOfClass:UIImage.class]) {
+                    source.sourceImage = content;
+                } else if ([content isKindOfClass:NSString.class]) {
+                    source.sourceImage = [UIImage imageWithContentsOfFile:content];
+                }
             } else if (source.type == YYEVAEffectSourceTypeText) {
                 
                 NSDictionary *textDict = (NSDictionary *)content;
