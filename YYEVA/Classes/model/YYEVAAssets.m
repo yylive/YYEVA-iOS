@@ -309,6 +309,28 @@
     return self.videoDuration;
 }
 
+- (void)resumeAudio
+{
+    if (!_audioPlayer) {
+        return;
+    }
+    
+    if (![_audioPlayer isPlaying]) {
+        [_audioPlayer play];
+    }
+}
+
+- (void)pauseAudio
+{
+    if (!_audioPlayer) {
+        return;
+    }
+    
+    if ([_audioPlayer isPlaying]) {
+        [_audioPlayer pause];
+    }
+}
+
 - (void)tryPlayAudio
 {
     if (!_audioPlayer) {
@@ -320,7 +342,6 @@
     }
     __weak typeof(self) weakself = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.01 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-         
         weakself.audioPlayer.currentTime = 0.0f;
         [weakself.audioPlayer prepareToPlay];
         [weakself.audioPlayer play];

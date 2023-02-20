@@ -39,6 +39,21 @@
     [maskRenderBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     maskRenderBtn.backgroundColor  = [UIColor yellowColor];
     [toolBarView addSubview:maskRenderBtn];
+    
+    UIButton *paustBtn = [[UIButton alloc] initWithFrame:CGRectMake(260, 0, 120, 22)];
+    [paustBtn setTitle:@"暂停" forState:UIControlStateNormal];
+    [paustBtn addTarget:self action:@selector(onClickPauseBtn) forControlEvents:UIControlEventTouchUpInside];
+    [paustBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    paustBtn.backgroundColor  = [UIColor purpleColor];
+    [toolBarView addSubview:paustBtn];
+    
+    UIButton *resumeBtn = [[UIButton alloc] initWithFrame:CGRectMake(260, 26, 120, 22)];
+    [resumeBtn setTitle:@"继续" forState:UIControlStateNormal];
+    [resumeBtn addTarget:self action:@selector(onClickResumeBtn) forControlEvents:UIControlEventTouchUpInside];
+    [resumeBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    resumeBtn.backgroundColor  = [UIColor brownColor];
+    [toolBarView addSubview:resumeBtn];
+     
      
     
     UITextField *textField =  [[UITextField alloc] initWithFrame:CGRectMake(30, 54, 240, 30)];
@@ -47,6 +62,15 @@
     textField.clearsOnBeginEditing = YES;
     [toolBarView addSubview:textField];
     self.textField = textField;
+}
+
+- (void)onClickPauseBtn
+{
+    [self.player pause];
+}
+- (void)onClickResumeBtn
+{
+    [self.player resume];
 }
  
   
@@ -94,7 +118,7 @@
 
 - (void)onClickMaskRenderBtn
 {
-    NSString *file = [[NSBundle mainBundle] pathForResource:@"card.mp4" ofType:nil];
+    NSString *file = [[NSBundle mainBundle] pathForResource:@"effect.mp4" ofType:nil];
     NSString *str = self.textField.text;
     
     if (self.player) {
@@ -113,10 +137,8 @@
     self.player = player;
     
     //配置相关属性
-    [player setImageUrl:png1 forKey:@"image1"];
-    [player setImageUrl:png2 forKey:@"anchor_avatar2"];
-    [player setImageUrl:png3 forKey:@"anchor_avatar3"];
-    [player setText:str.length ? str :@"可替换文案" forKey:@"text1"];
+    [player setImageUrl:png2 forKey:@"key"];
+    [player setText:str.length ? str :@"可替换文案" forKey:@"keyname.png"];
     
     //开始播
     [player play:file];

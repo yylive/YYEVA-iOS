@@ -35,6 +35,16 @@
         self.repeatCount = 1;
     }
     return self;
+} 
+
+- (instancetype)initWithUrl:(NSString *)url
+{
+    if (self = [super init]) {
+        self.backgroundColor = [UIColor clearColor];
+        self.mode = YYEVAContentMode_ScaleAspectFit;
+        self.repeatCount = 1;
+    }
+    return self;
 }
 
 - (void)dealloc
@@ -181,7 +191,21 @@
  
 - (void)pause
 {
-   self.mtkView.paused = YES;
+    //暂停视频流的渲染
+    if (_mtkView && !_mtkView.paused) {
+        _mtkView.paused = YES;
+    }
+    //暂停音频流
+    [self.assets pauseAudio];
+}
+
+- (void)resume
+{
+    if (_mtkView && _mtkView.paused) {
+        _mtkView.paused = NO;
+    }
+    
+    [self.assets resumeAudio];
 }
 
 #pragma mark - get/set

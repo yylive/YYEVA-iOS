@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 // 0表示一直循环播放
 - (void)play:(NSString *)fileUrl repeatCount:(NSInteger)repeatCount;
 - (void)pause;
+- (void)resume;
 - (void)stopAnimation;
 
 //设置相关动态属性
