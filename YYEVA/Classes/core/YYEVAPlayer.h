@@ -14,8 +14,10 @@ NS_ASSUME_NONNULL_BEGIN
   
 //播放器的回调通知
 @protocol IYYEVAPlayerDelegate <NSObject>
-@optional 
+@optional
+- (void)evaPlayerDidStart:(YYEVAPlayer *)player;
 - (void)evaPlayerDidCompleted:(YYEVAPlayer *)player;
+- (void)evaPlayer:(YYEVAPlayer *)player playFail:(NSError *)error;
 @end
 
 @interface YYEVAPlayer : UIView

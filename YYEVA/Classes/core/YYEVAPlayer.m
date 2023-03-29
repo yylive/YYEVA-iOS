@@ -124,6 +124,7 @@
 {
     self.repeatCount = repeatCount;
     YYEVAAssets *assets = [[YYEVAAssets alloc] initWithFilePath:url];
+    assets.delegate = self;
     [self switchAssets:assets];
     //包含描述信息 走的是maskRender
     [self setupMetal];
@@ -232,5 +233,25 @@
     self.bgContentMode = contentMode;
 }
 
+
+
+#pragma mark - YYEVAAssetsDelegate
+
+- (void)assetsDidStart:(YYEVAAssets *)asset
+{
+    NSLog(@"url:%@ did start",asset.filePath);
+    
+    if ([self.delegate respondsToSelector:@selector(evaPlayerDidStart:)]){
+        [self.delegate evaPlayerDidStart:self];
+    }
+}
+- (void)assetsDidLoadFaild:(YYEVAAssets *)asset failure:(NSError *)error
+{
+    NSLog(@"url:%@ did load failed",asset.filePath);
+    
+    if ([self.delegate respondsToSelector:@selector(evaPlayer:playFail:)]){
+        [self.delegate evaPlayer:self playFail:error];
+    }
+}
 
 @end

@@ -108,14 +108,22 @@
             }];
         }];
     }
-     
+}
+
+- (void)playFail:(YYEVAPlayerErrorCode)errCode
+{
+    if ([self.delegate respondsToSelector:@selector(assetsDidLoadFaild:failure:)]) {
+        [self.delegate assetsDidLoadFaild:self failure:[NSError errorWithDomain:NSURLErrorDomain code:errCode userInfo:nil]];
+    }
 }
 
 //metal:texture
 - (BOOL)loadVideo
 {
+    NSError *err;
+    
     if (!self.filePath || ![[NSFileManager defaultManager] fileExistsAtPath:self.filePath]) {
-        NSLog(@"filepath not exits:%@",self.filePath);
+        [self playFail:FileNotExits];
         return NO;
     }
     NSDictionary *dictionary = [self.demuxer demuxEffectJsonWithFilePath:self.filePath];
@@ -146,6 +154,7 @@
     
     if (!asset) {
         NSLog(@"load asset url:%@ failure",self.filePath);
+        [self playFail:LoadAssetsFail];
         return NO;
     }
     
@@ -153,11 +162,13 @@
     
     if (!reader) {
         NSLog(@"assetReaderWithAsset:%@ failure",self.filePath);
+        [self playFail:LoadAssetsFail];
         return NO;
     }
     AVAssetTrack *assetTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] firstObject];
     if (!assetTrack) {
         NSLog(@"tracksWithMediaType url:%@ failure",self.filePath);
+        [self playFail:LoadAssetsFail];
         return NO;
     }
     
@@ -253,9 +264,15 @@
                ref = (CMSampleBufferRef)CFArrayGetValueAtIndex(self->_sampleBufferQueue, 0);
                CFArrayRemoveValueAtIndex(self->_sampleBufferQueue, 0);
                _frameIndex++;
+               
+               //第一帧读取代表开始
+               if (_frameIndex == 0 && [self.delegate respondsToSelector:@selector(assetsDidStart:)]){
+                   [self.delegate assetsDidStart:self];
+               }
            }
        }
    }
+   
    [self readVideoTracksIntoQueueIfNeed];
    return ref;
 }
@@ -268,12 +285,9 @@
         if (self.reader && self.reader.status == AVAssetReaderStatusReading) {
             [self.reader cancelReading];
         }
-         
-        
         if (self->_sampleBufferQueue == NULL) {
             return;
         }
-        
         NSInteger count = CFArrayGetCount(self->_sampleBufferQueue);
         if (count > 0) {
             for (NSInteger i = 0; i < count; i++) {
@@ -287,9 +301,6 @@
         }
         CFArrayRemoveAllValues(self->_sampleBufferQueue);
     });
-    
-    
-    
 }
 
 - (void)dealloc

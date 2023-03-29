@@ -44,4 +44,11 @@ typedef NS_ENUM(NSInteger,YYEVAFillMode){
     YYEVAContentMode_ScaleAspectFill = 2,
 };
 
+
+//MP4资源播放失败原因
+typedef NS_ENUM(NSInteger,YYEVAPlayerErrorCode){
+     FileNotExits = 1,//文件不存在
+     LoadAssetsFail = 2, //资源解码失败
+};
+
 NS_ASSUME_NONNULL_END
