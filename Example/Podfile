@@ -3,6 +3,6 @@ use_frameworks!
 platform :ios, '9.0'
 
 target 'YYEVA_Example' do
-  pod 'YYEVA' , '1.1.8'  
+  pod 'YYEVA' , '1.1.9'  
   pod 'SSZipArchive'
 end
