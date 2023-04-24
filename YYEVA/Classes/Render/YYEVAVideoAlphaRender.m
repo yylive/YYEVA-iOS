@@ -18,6 +18,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 }
 @property (nonatomic, weak) MTKView *mtkView;
 @property (nonatomic, strong) id<MTLDevice> device;
+@property (nonatomic, strong)  id<MTLLibrary> library;
 @property (nonatomic, strong) id<MTLRenderPipelineState> renderPipelineState;
 @property (nonatomic, strong) id<MTLBuffer> vertexBuffer;
 @property (nonatomic, strong) id<MTLBuffer> convertMatrix;
@@ -26,6 +27,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 @property (nonatomic, assign) CVMetalTextureCacheRef textureCache;
 @property (nonatomic, assign) vector_uint2 viewportSize;
 @property (nonatomic, assign) NSInteger numVertices;
+@property (nonatomic, strong) NSMutableDictionary *fragmentFunctionDict;
 @end
 
 @implementation YYEVAVideoAlphaRender
@@ -57,6 +59,21 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 {
     self.playAssets = assets;
     [self setupVertex];
+
+    id<MTLFunction> vertexFunction = [self.library newFunctionWithName:@"normalVertexShader"];
+    id<MTLFunction> fragmentFunction = [self.fragmentFunctionDict objectForKey:@"LCRGFragmentSharder"];
+    
+    if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_LeftGrayRightColor) {
+        fragmentFunction = [self.fragmentFunctionDict objectForKey:@"LGRCFragmentSharder"];
+    } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_TopColorBottomGray) {
+        fragmentFunction = [self.fragmentFunctionDict objectForKey:@"TCBGFragmentSharder"];
+    } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_TopGrayBottomColor) {
+        fragmentFunction = [self.fragmentFunctionDict objectForKey:@"TGBCFragmentSharder"];
+    }
+    
+    MTLRenderPipelineDescriptor *renderPipelineDescriptor = [self getRenderPipelineDescriptorWithVertexFunction:vertexFunction FragmentFunction:fragmentFunction];
+    _renderPipelineState = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor error:nil];
+    
     CVMetalTextureCacheCreate(NULL, NULL, self.mtkView.device, NULL, &_textureCache);
 }
 
@@ -74,10 +91,27 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 - (void)setupRenderPiplineState
 {
     NSString *filePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"YYEVABundle.bundle/default" ofType:@"metallib"];
-    id<MTLLibrary> library = [_device newLibraryWithFile:filePath error:nil];
-    id<MTLFunction> vertexFunction = [library newFunctionWithName:@"normalVertexShader"];
-    id<MTLFunction> fragmentFunction = [library newFunctionWithName:@"normalFragmentSharder"];
+    _library = [_device newLibraryWithFile:filePath error:nil];
+    id<MTLFunction> vertexFunction = [_library newFunctionWithName:@"normalVertexShader"];
+    id<MTLFunction> fragmentFunction1 = [_library newFunctionWithName:@"LCRGFragmentSharder"];
+    id<MTLFunction> fragmentFunction2 = [_library newFunctionWithName:@"LGRCFragmentSharder"];
+    id<MTLFunction> fragmentFunction3 = [_library newFunctionWithName:@"TCBGFragmentSharder"];
+    id<MTLFunction> fragmentFunction4 = [_library newFunctionWithName:@"TGBCFragmentSharder"];
+
+    [self.fragmentFunctionDict setObject:fragmentFunction1 forKey:@"LCRGFragmentSharder"];
+    [self.fragmentFunctionDict setObject:fragmentFunction2 forKey:@"LGRCFragmentSharder"];
+    [self.fragmentFunctionDict setObject:fragmentFunction3 forKey:@"TCBGFragmentSharder"];
+    [self.fragmentFunctionDict setObject:fragmentFunction4 forKey:@"TGBCFragmentSharder"];
     
+    MTLRenderPipelineDescriptor *renderPipelineDescriptor = [self getRenderPipelineDescriptorWithVertexFunction:vertexFunction FragmentFunction:fragmentFunction1];
+    _renderPipelineState = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor error:nil];
+    
+    _commandQueue = [_device newCommandQueue];
+}
+
+- (MTLRenderPipelineDescriptor *)getRenderPipelineDescriptorWithVertexFunction:( id<MTLFunction>)vertexFunction
+                                                              FragmentFunction:(id<MTLFunction>)fragmentFunction
+{
     MTLRenderPipelineDescriptor *renderPipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
     renderPipelineDescriptor.vertexFunction = vertexFunction;
     renderPipelineDescriptor.fragmentFunction = fragmentFunction;
@@ -89,10 +123,8 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     renderPipelineDescriptor.colorAttachments[0].sourceAlphaBlendFactor =  MTLBlendFactorSourceAlpha;
     renderPipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
     renderPipelineDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
-    _renderPipelineState = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor error:nil];
     
-    
-    _commandQueue = [_device newCommandQueue];
+    return renderPipelineDescriptor;
 }
 
 - (void)recalculateViewGeometry
@@ -178,7 +210,6 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     self.convertMatrix = [self.mtkView.device newBufferWithBytes:&matrix
                                                         length:sizeof(YSVideoMetalConvertMatrix)
                                                 options:MTLResourceStorageModeShared];
-     
 }
 
 
@@ -269,6 +300,14 @@ extern vector_float3 kColorConversion601FullRangeOffset;
                                pixelFormat:pixelFormat
                                     device:self.device textureCache:self.textureCache];
     return texture;
+}
+
+- (NSMutableDictionary *)fragmentFunctionDict
+{
+    if (!_fragmentFunctionDict) {
+        _fragmentFunctionDict = @{}.mutableCopy;
+    }
+    return _fragmentFunctionDict;
 }
  
 @end

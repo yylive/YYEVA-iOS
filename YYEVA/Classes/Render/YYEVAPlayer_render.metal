@@ -50,7 +50,7 @@ normalVertexShader(uint vertexID [[ vertex_id ]],
 
  
 fragment float4
-normalFragmentSharder(VertexSharderOutput input [[stage_in]],
+LCRGFragmentSharder(VertexSharderOutput input [[stage_in]],
                texture2d<float> textureY [[ texture(YSVideoMetalFragmentTextureIndexTextureY) ]],
                texture2d<float> textureUV [[ texture(YSVideoMetalFragmentTextureIndexTextureUV) ]],
                constant YSVideoMetalConvertMatrix *convertMatrix [[ buffer(YSVideoMetalFragmentBufferIndexMatrix) ]])
@@ -70,6 +70,69 @@ normalFragmentSharder(VertexSharderOutput input [[stage_in]],
     return float4(sourceRGB, alphaRGB.r);
 }
  
+fragment float4
+LGRCFragmentSharder(VertexSharderOutput input [[stage_in]],
+               texture2d<float> textureY [[ texture(YSVideoMetalFragmentTextureIndexTextureY) ]],
+               texture2d<float> textureUV [[ texture(YSVideoMetalFragmentTextureIndexTextureUV) ]],
+               constant YSVideoMetalConvertMatrix *convertMatrix [[ buffer(YSVideoMetalFragmentBufferIndexMatrix) ]])
+{
+    constexpr sampler textureSampler (mag_filter::linear,
+                                      min_filter::linear);
+    
+    float sourceX =  input.textureCoordinate.x *0.5 + 0.5;
+    float alphaX = input.textureCoordinate.x *0.5;
+    float y = input.textureCoordinate.y;
+    float2 sourceCoordinate = float2(sourceX,y);
+    float2 alphaCoordinate = float2(alphaX,y);
+     
+    float3 sourceRGB = RGBColorFromYuvTextures(textureSampler, sourceCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    float3 alphaRGB = RGBColorFromYuvTextures(textureSampler, alphaCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    //新增mask
+    return float4(sourceRGB, alphaRGB.r);
+}
+
+fragment float4
+TCBGFragmentSharder(VertexSharderOutput input [[stage_in]],
+               texture2d<float> textureY [[ texture(YSVideoMetalFragmentTextureIndexTextureY) ]],
+               texture2d<float> textureUV [[ texture(YSVideoMetalFragmentTextureIndexTextureUV) ]],
+               constant YSVideoMetalConvertMatrix *convertMatrix [[ buffer(YSVideoMetalFragmentBufferIndexMatrix) ]])
+{
+    constexpr sampler textureSampler (mag_filter::linear,
+                                      min_filter::linear);
+    
+    float x = input.textureCoordinate.x;
+    float sourceY =  input.textureCoordinate.y *0.5;
+    float alphaY = input.textureCoordinate.y *0.5 + 0.5;
+    float2 sourceCoordinate = float2(x,sourceY);
+    float2 alphaCoordinate = float2(x,alphaY);
+     
+    float3 sourceRGB = RGBColorFromYuvTextures(textureSampler, sourceCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    float3 alphaRGB = RGBColorFromYuvTextures(textureSampler, alphaCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    //新增mask
+    return float4(sourceRGB, alphaRGB.r);
+}
+
+fragment float4
+TGBCFragmentSharder(VertexSharderOutput input [[stage_in]],
+               texture2d<float> textureY [[ texture(YSVideoMetalFragmentTextureIndexTextureY) ]],
+               texture2d<float> textureUV [[ texture(YSVideoMetalFragmentTextureIndexTextureUV) ]],
+               constant YSVideoMetalConvertMatrix *convertMatrix [[ buffer(YSVideoMetalFragmentBufferIndexMatrix) ]])
+{
+    constexpr sampler textureSampler (mag_filter::linear,
+                                      min_filter::linear);
+    
+    float x = input.textureCoordinate.x;
+    float sourceY =  input.textureCoordinate.y *0.5 +0.5;
+    float alphaY = input.textureCoordinate.y *0.5;
+    float2 sourceCoordinate = float2(x,sourceY);
+    float2 alphaCoordinate = float2(x,alphaY);
+     
+    float3 sourceRGB = RGBColorFromYuvTextures(textureSampler, sourceCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    float3 alphaRGB = RGBColorFromYuvTextures(textureSampler, alphaCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    //新增mask
+    return float4(sourceRGB, alphaRGB.r);
+}
+
 
 vertex VertexMaskSharderOutput
 maskVertexShader(uint vertexID [[ vertex_id ]],

@@ -42,10 +42,10 @@
 @implementation YYEVARegionChecker
 - (YYEVAColorRegion)checkFile:(NSString *)url
 {
-    return [self checkFile:url CheckMaxFrame:3];
+    return [self checkFile:url CheckCount:3];
 }
 
-- (YYEVAColorRegion)checkFile:(NSString *)url CheckMaxFrame:(NSInteger)maxFrame
+- (YYEVAColorRegion)checkFile:(NSString *)url CheckCount:(NSInteger) count
 {
     YYEVAColorRegion result = YYEVAColorRegion_Invaile;
     
@@ -69,9 +69,9 @@
     ![_reader canAddOutput:_output] ?:  [_reader addOutput:_output];
     [_reader startReading];
     
-    for (int i = 0; i<maxFrame; i++) {
+    for (int i = 0; i<count; i++) {
         @autoreleasepool {
-            CMSampleBufferRef sampleBufferRef = [self getNextSampleBufferRef];
+            CMSampleBufferRef sampleBufferRef = [self getNextSampleBufferRefWithStep:5];
             if (sampleBufferRef == NULL) {
                 continue;
             }
@@ -127,16 +127,16 @@
     } else if (LTIsColor && RTIsColor && LBIsColor && RBIsColor) {
         NSLog(@"全都是彩色，普通MP4");
         result = YYEVAColorRegion_NormalMP4;
-    } else if ((LTIsColor || LBIsColor) && !(RTIsColor && RBIsColor)) {
+    } else if ((LTIsColor || LBIsColor) && (!RTIsColor && !RBIsColor)) {
         NSLog(@"左彩色，右黑白，透明MP4");
         result = YYEVAColorRegion_AlphaMP4_LeftColorRightGray;
-    }  else if (!(LTIsColor && LBIsColor) && (RTIsColor || RBIsColor)) {
+    }  else if ((!LTIsColor && !LBIsColor) && (RTIsColor || RBIsColor)) {
         NSLog(@"左黑白，右彩色，透明MP4");
         result = YYEVAColorRegion_AlphaMP4_LeftGrayRightColor;
-    }  else if ((LTIsColor || RTIsColor) && !(LBIsColor && RBIsColor)) {
+    }  else if ((LTIsColor || RTIsColor) && (!LBIsColor && !RBIsColor)) {
         NSLog(@"上彩色，下黑白，透明MP4");
         result = YYEVAColorRegion_AlphaMP4_TopColorBottomGray;
-    }  else if (!(LTIsColor && RTIsColor) && (LBIsColor || RBIsColor)) {
+    }  else if ((!LTIsColor && !RTIsColor) && (LBIsColor || RBIsColor)) {
         NSLog(@"上黑白，下彩色，透明MP4");
         result = YYEVAColorRegion_AlphaMP4_TopGrayBottomColor;
     }
@@ -258,10 +258,16 @@
     return pxbuffer;
 }
 
-- (CMSampleBufferRef)getNextSampleBufferRef {
+- (CMSampleBufferRef)getNextSampleBufferRefWithStep:(NSInteger)step {
     CMSampleBufferRef sampleBufferRef = NULL;
     if (_reader.status == AVAssetReaderStatusReading) {
-        sampleBufferRef = [_output copyNextSampleBuffer];
+        for (int i = 0; i < step; i++) {
+            sampleBufferRef = [_output copyNextSampleBuffer];
+            if (i != step-1) {
+                CMSampleBufferInvalidate(sampleBufferRef);
+                CFRelease(sampleBufferRef);
+            }
+        }
     }
     
     return sampleBufferRef;

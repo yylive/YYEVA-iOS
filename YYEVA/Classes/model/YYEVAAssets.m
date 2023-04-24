@@ -205,9 +205,13 @@
     
     if (CGSizeEqualToSize(self.rgbSize, CGSizeZero)) {
         self.rgbSize = CGSizeMake(assetTrack.naturalSize.width / 2, assetTrack.naturalSize.height);
+        
+        if (self.region == YYEVAColorRegion_AlphaMP4_TopGrayBottomColor ||
+                   self.region == YYEVAColorRegion_AlphaMP4_TopColorBottomGray) {
+            self.rgbSize = CGSizeMake(assetTrack.naturalSize.width, assetTrack.naturalSize.height/2);
+        }
     }
      
-    
     _frameDuration = duration;
     _preferredFramesPerSecond = 1 / duration;
     _frameIndex = -1;
