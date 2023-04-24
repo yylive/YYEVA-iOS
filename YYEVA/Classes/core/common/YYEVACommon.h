@@ -51,4 +51,15 @@ typedef NS_ENUM(NSInteger,YYEVAPlayerErrorCode){
      LoadAssetsFail = 2, //资源解码失败
 };
 
+
+//MP4色彩区域
+typedef enum : NSUInteger {
+    YYEVAColorRegion_Invaile = 0,                 //检测失败
+    YYEVAColorRegion_NormalMP4,                   //普通MP4，没透明区域
+    YYEVAColorRegion_AlphaMP4_LeftColorRightGray, //左彩色右透明
+    YYEVAColorRegion_AlphaMP4_LeftGrayRightColor, //左透明右彩色
+    YYEVAColorRegion_AlphaMP4_TopColorBottomGray, //上彩色下透明
+    YYEVAColorRegion_AlphaMP4_TopGrayBottomColor  //上透明下彩色
+} YYEVAColorRegion;
+
 NS_ASSUME_NONNULL_END

@@ -10,6 +10,7 @@
 #import "YYEVAEffectInfo.h"
 #import "YSVideoMetalUtils.h"
 #import <AVFoundation/AVFoundation.h>
+#import "YYEVARegionChecker.h"
 
 #define kSampleBufferQueueMaxCapacity 3
 
@@ -24,6 +25,7 @@
 @property (nonatomic, assign) NSTimeInterval frameDuration;
 @property (nonatomic, strong) YYEVADemuxMedia *demuxer;
 @property (nonatomic, strong) AVAudioPlayer *audioPlayer;
+@property (nonatomic, strong) YYEVARegionChecker *regionChecker;
 @end
 
 @implementation YYEVAAssets
@@ -52,6 +54,7 @@
         _assetID = [YYEVAAssets generateUniqueID];
         _filePath = filePath;
         _demuxer = [[YYEVADemuxMedia alloc] init];
+        _regionChecker = [[YYEVARegionChecker alloc] init];
         //解析fileUrl
         _readVideoBufferQueue = dispatch_queue_create("com.yy.eva.ReadBufferQueue", DISPATCH_QUEUE_SERIAL);
         _sampleBufferQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
@@ -138,10 +141,12 @@
         self.isEffectVideo = NO;
     }
     
-    
     if (self.isEffectVideo) {
         [self reloadEffect];
         self.size = CGSizeMake(self.effectInfo.videoWidth, self.effectInfo.videoHeight);
+    } else {
+        YYEVAColorRegion region = [self.regionChecker checkFile:self.filePath];
+        _region = region;
     }
     
     //获取视频的分辨率
