@@ -34,8 +34,8 @@ typedef struct
 float3 RGBColorFromYuvTextures(sampler textureSampler, float2 coordinate, texture2d<float> texture_luma, texture2d<float> texture_chroma, matrix_float3x3 rotationMatrix, float3 offset) {
     
     float3 sourceYUV = float3(texture_luma.sample(textureSampler, coordinate).r,
-                              texture_chroma.sample(textureSampler, coordinate).rg);
-    return rotationMatrix * (sourceYUV + offset);;
+                              texture_chroma.sample(textureSampler, coordinate).rg - offset.xy);
+    return rotationMatrix * sourceYUV;
 }
 
 vertex VertexSharderOutput
@@ -58,17 +58,14 @@ normalFragmentSharder(VertexSharderOutput input [[stage_in]],
     constexpr sampler textureSampler (mag_filter::linear,
                                       min_filter::linear);
     
-    float sourceX = input.textureCoordinate.x / 2;
-    float alphaX =  input.textureCoordinate.x / 2 + 0.5;
+    float sourceX = input.textureCoordinate.x *0.5;
+    float alphaX =  input.textureCoordinate.x *0.5 + 0.5;
     float y = input.textureCoordinate.y;
     float2 sourceCoordinate = float2(sourceX,y);
     float2 alphaCoordinate = float2(alphaX,y);
-    float3 sourceYUV = float3(textureY.sample(textureSampler, sourceCoordinate).r,
-                        textureUV.sample(textureSampler, sourceCoordinate).rg);
-    float3 alphaYUV = float3(textureY.sample(textureSampler, alphaCoordinate).r,
-                        textureUV.sample(textureSampler, alphaCoordinate).rg);
-    float3 sourceRGB = convertMatrix->matrix * (sourceYUV + convertMatrix->offset);
-    float3 alphaRGB = convertMatrix->matrix * (alphaYUV + convertMatrix->offset);
+     
+    float3 sourceRGB = RGBColorFromYuvTextures(textureSampler, sourceCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    float3 alphaRGB = RGBColorFromYuvTextures(textureSampler, alphaCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
     //新增mask
     return float4(sourceRGB, alphaRGB.r);
 }
@@ -94,13 +91,8 @@ maskFragmentSharder(VertexMaskSharderOutput input [[stage_in]],
 {
     constexpr sampler textureSampler (mag_filter::linear,
                                       min_filter::linear);
-
-    float3 sourceYUV = float3(textureY.sample(textureSampler, input.rgbTextureCoordinate).r,
-                        textureUV.sample(textureSampler, input.rgbTextureCoordinate).rg);
-    float3 alphaYUV = float3(textureY.sample(textureSampler, input.alphaTextureCoordinate).r,
-                        textureUV.sample(textureSampler, input.alphaTextureCoordinate).rg);
-    float3 sourceRGB = convertMatrix->matrix * (sourceYUV + convertMatrix->offset);
-    float3 alphaRGB = convertMatrix->matrix * (alphaYUV + convertMatrix->offset);
+    float3 sourceRGB = RGBColorFromYuvTextures(textureSampler, input.rgbTextureCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    float3 alphaRGB = RGBColorFromYuvTextures(textureSampler, input.alphaTextureCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
 //    //新增mask
     return float4(sourceRGB, alphaRGB.r);
  

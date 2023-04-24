@@ -14,7 +14,7 @@ matrix_float3x3 kColorConversion601FullRangeMatrix = (matrix_float3x3){
     (simd_float3){1.4,    -0.711, 0.0},
 };
 
-vector_float3 kColorConversion601FullRangeOffset = (vector_float3){ -(16.0/255.0), -0.5, -0.5};
+vector_float3 kColorConversion601FullRangeOffset = (vector_float3){0.5, 0.5,1};
 
 //arr0[0...(size-1)] <- arr1[0...(size-1)]
 void replaceArrayElements(float arr0[], float arr1[], int size) {
