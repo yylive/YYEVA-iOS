@@ -93,8 +93,7 @@
     CVPixelBufferRef yuvPixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     CVPixelBufferLockBaseAddress(yuvPixelBuffer, 0);
     
-    NSInteger scale = 16;
-    CVPixelBufferRef rgbPixelBuffer = [self getRGBPixelBufferFromYUVPixelBuffer:yuvPixelBuffer Scale:scale];
+    CVPixelBufferRef rgbPixelBuffer = [self getRGBPixelBufferFromYUVPixelBuffer:yuvPixelBuffer];
     CVPixelBufferLockBaseAddress(rgbPixelBuffer, 0);
 
     size_t pWidth = CVPixelBufferGetWidth(rgbPixelBuffer);
@@ -158,7 +157,6 @@
         CVPixelBufferLockBaseAddress(pixelBuffer, 0);
         unsigned char *baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
         
-        size_t width = CVPixelBufferGetWidth(pixelBuffer);
         size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
         size_t index = node.point.y * bytesPerRow + node.point.x*4;
         
@@ -199,7 +197,7 @@
 }
 
 #pragma mark - get something
-- (CVPixelBufferRef)getRGBPixelBufferFromYUVPixelBuffer:(CVPixelBufferRef)yuvPx Scale:(NSInteger)scale
+- (CVPixelBufferRef)getRGBPixelBufferFromYUVPixelBuffer:(CVPixelBufferRef)yuvPx
 {
     CVPixelBufferLockBaseAddress(yuvPx, 0);
     //     将YUV图像转换为CIImage
@@ -208,10 +206,8 @@
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGImageRef rgbaImage = [self.ciContext createCGImage:ciImage fromRect:ciImage.extent format:kCIFormatBGRA8 colorSpace:colorSpace];
     CGColorSpaceRelease(colorSpace);
-    
-    UIImage *img = [self downSample:[UIImage imageWithCGImage:rgbaImage] to:CGSizeMake(CGImageGetWidth(rgbaImage)/scale, CGImageGetHeight(rgbaImage)/scale)];
 
-    CVPixelBufferRef rgbPixelBuffer = [self getCVPixelBufferFromImage:img];
+    CVPixelBufferRef rgbPixelBuffer = [self getCVPixelBufferFromImage:[UIImage imageWithCGImage:rgbaImage]];
     
     CFRelease(rgbaImage);
     rgbaImage = NULL;
@@ -273,42 +269,6 @@
     return sampleBufferRef;
 }
 
-#pragma mark - downSample
-- (UIImage *)downSample:(UIImage *)image to:(CGSize)size {
-    CFStringRef key[1];
-    key[0] = kCGImageSourceShouldCache;
-    CFTypeRef value[1];
-    value[0] = (CFTypeRef)kCFBooleanFalse;
-    
-    CFDictionaryRef imageSourceOption = CFDictionaryCreate(NULL,
-                                                           (const void **) key,
-                                                           (const void **) value,
-                                                           1,
-                                                           &kCFTypeDictionaryKeyCallBacks,
-                                                           &kCFTypeDictionaryValueCallBacks);
-    
-    CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)UIImagePNGRepresentation(image), imageSourceOption);
-    
-    CFMutableDictionaryRef mutOption = CFDictionaryCreateMutable(NULL,
-                                                                 4,
-                                                                 &kCFTypeDictionaryKeyCallBacks,
-                                                                 &kCFTypeDictionaryValueCallBacks);
-    
-    
-    CGFloat maxDimension = MAX(size.width, size.height) * [UIScreen mainScreen].scale;
-    NSNumber *maxDimensionNum = [NSNumber numberWithFloat:maxDimension];
-    CFDictionaryAddValue(mutOption, kCGImageSourceCreateThumbnailFromImageAlways, kCFBooleanTrue);
-    CFDictionaryAddValue(mutOption, kCGImageSourceShouldCacheImmediately, kCFBooleanTrue);
-    CFDictionaryAddValue(mutOption, kCGImageSourceCreateThumbnailWithTransform, kCFBooleanTrue);
-    CFDictionaryAddValue(mutOption, kCGImageSourceThumbnailMaxPixelSize, (__bridge CFNumberRef)maxDimensionNum);
-    
-    CFDictionaryRef dowsamplingOption = CFDictionaryCreateCopy(NULL, mutOption);
-    
-    CGImageRef downSampleImageRef = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, dowsamplingOption);
-    
-    UIImage *img = [UIImage imageWithCGImage:downSampleImageRef];
-    return img;
-}
 
 #pragma mark - lazy load
 - (CIContext *)ciContext
@@ -320,7 +280,7 @@
 }
 
 #pragma mark - static
-static OSType inputPixelFormat() {
+static OSType inputPixelFormat(void) {
     return kCVPixelFormatType_32BGRA;
 }
 
