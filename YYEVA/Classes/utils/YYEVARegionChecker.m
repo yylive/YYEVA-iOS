@@ -71,7 +71,7 @@
     
     for (int i = 0; i<count; i++) {
         @autoreleasepool {
-            CMSampleBufferRef sampleBufferRef = [self getNextSampleBufferRefWithStep:5];
+            CMSampleBufferRef sampleBufferRef = [self getNextSampleBufferRefWithStep:i == 0 ? 1 : 5];
             if (sampleBufferRef == NULL) {
                 continue;
             }
@@ -138,6 +138,8 @@
     }  else if ((!LTIsColor && !RTIsColor) && (LBIsColor || RBIsColor)) {
         NSLog(@"上黑白，下彩色，透明MP4");
         result = YYEVAColorRegion_AlphaMP4_TopGrayBottomColor;
+    } else {
+        NSLog(@"颜色区域分布不规则的MP4");
     }
     
     CFRelease(rgbPixelBuffer);
