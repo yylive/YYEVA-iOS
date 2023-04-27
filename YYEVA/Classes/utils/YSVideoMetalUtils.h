@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 extern "C" {
 #endif  
 
-    extern void normalVerticesWithFillMod(CGRect rect, CGSize containerSize, CGSize picSize,YYEVAEffectSourceImageFillMode fillMode, float vertices[_Nullable 16],YYEVAFillMode videoFillMode,CGSize trueSize);
+    extern void normalVerticesWithFillMod(CGRect rect, CGSize containerSize, CGSize picSize,YYEVAEffectSourceImageFillMode fillMode, float vertices[_Nullable 16],YYEVAFillMode videoFillMode,CGSize trueSize, CGSize *renderSize);
    
     extern void textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coordinates[_Nullable 8]);
     extern void mask_textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coordinates[_Nullable 8]);

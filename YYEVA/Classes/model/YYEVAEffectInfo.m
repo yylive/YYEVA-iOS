@@ -50,6 +50,7 @@ CGRect getFrame(NSArray *arry)
                                         device:(id<MTLDevice>)device
                                       fillMode:(YYEVAFillMode)fillMode
                                       trueSize:(CGSize)trueSize
+                                    renderSize:(CGSize *)renderSize
 {
     if (size.width <= 0 || size.height <= 0 || mSize.width <= 0 || mSize.height <= 0) {
         NSLog(@"--%@ - fail",NSStringFromSelector(_cmd));
@@ -63,7 +64,7 @@ CGRect getFrame(NSArray *arry)
      //4 + 2 + 2 = 8  * 4 = 32
     const int colunmCountForVertices = 4, colunmCountForCoordinate = 2, vertexDataLength = 32;
     float vertices[16], maskCoordinates[8];
-    normalVerticesWithFillMod(self.renderFrame, size, self.src.sourceImage.size,self.src.fillMode,vertices,fillMode,trueSize);
+    normalVerticesWithFillMod(self.renderFrame, size, self.src.sourceImage.size,self.src.fillMode,vertices,fillMode,trueSize, renderSize);
     mask_textureCoordinateFromRect(self.outputFrame, mSize, maskCoordinates);
     float sourceCoordinates[8] = {
         0.0, 1.0,

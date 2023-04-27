@@ -376,18 +376,20 @@ extern vector_float3 kColorConversion601FullRangeOffset;
             //    vector_float2 sourceTextureCoordinate; 2
             //    vector_float2 maskTextureCoordinate; 2
             // 」
+            CGSize renderSize = CGSizeZero;
             id<MTLBuffer> vertexBuffer = [mergeInfo vertexBufferWithContainerSize:size
                                                                 maskContianerSize:videoSize
                                                                            device:self.device
                                                                          fillMode:self.fillMode
-                                                                         trueSize:self.mtkView.bounds.size];
+                                                                         trueSize:self.mtkView.bounds.size
+                                                                       renderSize:&renderSize];
             
             id<MTLTexture> sourceTexture = mergeInfo.src.texture;
             if (!sourceTexture) {
                 sourceTexture =  [self loadTextureWithImage:mergeInfo.src.sourceImage
                                                      device:_device
                                                    trueSize:self.mtkView.bounds.size
-                                              containerSize:size
+                                              containerSize:renderSize
                                               videoFillMode:self.fillMode
                                                    fillMode:mergeInfo.src.fillMode]; //图片纹理
                 mergeInfo.src.texture = sourceTexture;

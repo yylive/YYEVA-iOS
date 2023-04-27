@@ -22,7 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
                              maskContianerSize:(CGSize)mSize
                                         device:(id<MTLDevice>)device
                                       fillMode:(YYEVAFillMode)fillMode
-                                      trueSize:(CGSize)trueSize;
+                                      trueSize:(CGSize)trueSize
+                                    renderSize:(CGSize *)renderSize;
 @end
 
 @interface YYEVAEffectSource : NSObject

@@ -54,7 +54,8 @@ void normalVerticesWithFillMod(CGRect rect,
                                YYEVAEffectSourceImageFillMode fillMode,
                                float vertices[16],
                                YYEVAFillMode videoFillMode,
-                               CGSize trueSize) {
+                               CGSize trueSize,
+                               CGSize *renderSize) {
     //trueSize 传的是pt  设计师计算的是两倍的像素
     trueSize = CGSizeMake(trueSize.width * 2, trueSize.height * 2);
     float heightScaling = 1.0;
@@ -100,7 +101,9 @@ void normalVerticesWithFillMod(CGRect rect,
     CGFloat lowPicRatio = MIN( realWidth / picW , realHeight / picH);
     CGFloat highPicRatio = MAX( realWidth / picW , realHeight / picH);
     
-     
+    CGFloat picRealWidth = picW;
+    CGFloat picRealHeight = picH;
+    
     fillMode = YYEVAEffectSourceImageFillModeAspectFit;
     switch (fillMode) {
         case YYEVAEffectSourceImageFillModeScaleFill:
@@ -109,20 +112,21 @@ void normalVerticesWithFillMod(CGRect rect,
             break;
 
         case YYEVAEffectSourceImageFillModeAspectFit:
-            realWidth = lowPicRatio * picW;
-            realHeight = lowPicRatio * picH;
-            widthPicScaling = realWidth / picW;
-            heightPicScaling = realHeight / picH;
+            picRealWidth = lowPicRatio * picW;
+            picRealHeight = lowPicRatio * picH;
+            widthPicScaling = picRealWidth / picW;
+            heightPicScaling = picRealHeight / picH;
             break;
 
         case YYEVAEffectSourceImageFillModeAspectFill:
-            realWidth = highPicRatio * picW;
-            realHeight = highPicRatio * picH;
-            widthPicScaling = realWidth / picW;
-            heightPicScaling = realHeight / picH;
+            picRealWidth = highPicRatio * picW;
+            picRealHeight = highPicRatio * picH;
+            widthPicScaling = picRealWidth / picW;
+            heightPicScaling = picRealHeight / picH;
             break;
     }
      
+    *renderSize = CGSizeMake(picRealWidth, picRealHeight);
 
     originX = (-1+2*rect.origin.x/containerSize.width) * widthScaling ;
     originY = (1-2*rect.origin.y/containerSize.height) * heightScaling ;
