@@ -135,6 +135,11 @@
     
     _effectInfo = effectInfo;
     
+    if (!effectInfo && self.region == YYEVAColorRegion_NoSpecify) {
+        YYEVAColorRegion region = [self.regionChecker checkFile:self.filePath];
+        _region = region;
+    }
+    
     if (effectInfo && effectInfo.isEffect) {
         self.isEffectVideo = YES;
     } else {
@@ -144,9 +149,6 @@
     if (self.isEffectVideo) {
         [self reloadEffect];
         self.size = CGSizeMake(self.effectInfo.videoWidth, self.effectInfo.videoHeight);
-    } else {
-        YYEVAColorRegion region = [self.regionChecker checkFile:self.filePath];
-        _region = region;
     }
     
     //获取视频的分辨率

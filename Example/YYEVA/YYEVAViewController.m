@@ -139,7 +139,7 @@
     //配置相关属性
     [player setImageUrl:png2 forKey:@"key"];
     [player setText:str.length ? str :@"可替换文案" forKey:@"keyname.png"];
-    
+//    player.regionMode = YYEVAColorRegion_AlphaMP4_LeftGrayRightColor; //指定色彩区域
     //开始播
     [player play:file];
 }

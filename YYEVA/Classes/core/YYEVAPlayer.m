@@ -32,20 +32,11 @@
     if (self = [super init]) {
         self.backgroundColor = [UIColor clearColor];
         self.mode = YYEVAContentMode_ScaleAspectFit;
+        self.regionMode = YYEVAColorRegion_NoSpecify;
         self.repeatCount = 1;
     }
     return self;
 } 
-
-- (instancetype)initWithUrl:(NSString *)url
-{
-    if (self = [super init]) {
-        self.backgroundColor = [UIColor clearColor];
-        self.mode = YYEVAContentMode_ScaleAspectFit;
-        self.repeatCount = 1;
-    }
-    return self;
-}
 
 - (void)dealloc
 { 
@@ -124,6 +115,7 @@
 {
     self.repeatCount = repeatCount;
     YYEVAAssets *assets = [[YYEVAAssets alloc] initWithFilePath:url];
+    assets.region = self.regionMode;
     assets.delegate = self;
     [self switchAssets:assets];
     //包含描述信息 走的是maskRender
@@ -231,6 +223,16 @@
 {
     self.bgImageUrl = imgUrl;
     self.bgContentMode = contentMode;
+}
+
+- (void)setRegionMode:(YYEVAColorRegion)regionMode
+{
+    if (_regionMode == regionMode) {
+        return;
+    }
+    
+    _regionMode = regionMode;
+    self.assets.region = regionMode;
 }
 
 
