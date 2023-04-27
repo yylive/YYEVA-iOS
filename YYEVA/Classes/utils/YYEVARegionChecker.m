@@ -71,7 +71,6 @@
     
     for (int i = 0; i<count; i++) {
         @autoreleasepool {
-            NSTimeInterval start = [[NSDate date] timeIntervalSince1970];
             CMSampleBufferRef sampleBufferRef = [self getNextSampleBufferRefWithStep:i == 0 ? 1 : 10];
             if (sampleBufferRef == NULL) {
                 continue;
