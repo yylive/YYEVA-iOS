@@ -23,6 +23,7 @@
 @property (nonatomic, copy)   NSString *bgImageUrl;
 @property (nonatomic, assign) UIViewContentMode bgContentMode;
 @property (nonatomic, assign) NSInteger repeatCount;
+@property (nonatomic, strong) NSTimer *timer;
 @end
 
 @implementation YYEVAPlayer
@@ -131,24 +132,51 @@
    self.mtkView.frame = self.bounds;
    self.mtkView.backgroundColor = [UIColor clearColor];
    self.mtkView.preferredFramesPerSecond = assets.preferredFramesPerSecond ;
-
+   self.mtkView.paused = YES;
+   self.mtkView.enableSetNeedsDisplay = false;
+   
     __weak typeof(self) weakSelf = self;
        
     self.videoRender.completionPlayBlock = ^{
+        [weakSelf timerEnd];
         weakSelf.repeatCount--;
         if (weakSelf.repeatCount > 0) {
 //            [weakSelf playWithFileUrl:url repeatCount:weakSelf.repeatCount];
             [weakSelf.assets reload];
         } else {
-            weakSelf.mtkView.paused = YES;
             [weakSelf endPlay];
         }
-        
     };
    [self.videoRender playWithAssets:assets];
    [self.assets tryPlayAudio];
+    
+    [self timerStart];
+   
 }
  
+- (void)timerDraw
+{
+    [self.mtkView draw];
+}
+
+- (void)timerEnd
+{
+    if(_timer) {
+        [_timer invalidate];
+        _timer = nil;
+    }
+}
+
+- (void)timerStart
+{
+    [self timerEnd];
+    NSTimeInterval per =  1.0 / self.assets.preferredFramesPerSecond;
+   
+    self.timer = [NSTimer timerWithTimeInterval:per target:self selector:@selector(timerDraw) userInfo:nil repeats:YES];
+    [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
+    [self.timer fire];
+    
+}
 
 - (void)endPlay
 {
@@ -185,18 +213,14 @@
 - (void)pause
 {
     //暂停视频流的渲染
-    if (_mtkView && !_mtkView.paused) {
-        _mtkView.paused = YES;
-    }
+    [self timerEnd];
     //暂停音频流
     [self.assets pauseAudio];
 }
 
 - (void)resume
 {
-    if (_mtkView && _mtkView.paused) {
-        _mtkView.paused = NO;
-    }
+    [self timerStart];
     
     [self.assets resumeAudio];
 }
