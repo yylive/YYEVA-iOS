@@ -143,6 +143,7 @@
         if (weakSelf.repeatCount > 0) {
 //            [weakSelf playWithFileUrl:url repeatCount:weakSelf.repeatCount];
             [weakSelf.assets reload];
+            [weakSelf timerStart];
         } else {
             [weakSelf endPlay];
         }
