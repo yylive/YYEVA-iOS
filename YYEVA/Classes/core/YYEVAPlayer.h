@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface YYEVAPlayer : UIView
 
-@property (nonatomic, assign) id<IYYEVAPlayerDelegate> delegate;
+@property (nonatomic, weak) id<IYYEVAPlayerDelegate> delegate;
 /// 视频拉伸模式
 @property (nonatomic, assign) YYEVAFillMode mode;
 /// 颜色区域
