@@ -142,6 +142,7 @@
 //    player.regionMode = YYEVAColorRegion_AlphaMP4_LeftGrayRightColor; //指定色彩区域
     //开始播
     [player play:file];
+//    [player play:file repeatCount:5];
 }
 
 - (CGRect)playViewFrame

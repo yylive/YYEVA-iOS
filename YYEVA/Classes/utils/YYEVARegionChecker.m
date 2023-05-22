@@ -100,8 +100,8 @@
     size_t pHeight = CVPixelBufferGetHeight(rgbPixelBuffer);
 
     
-    //    抽取144个点
-    NSUInteger sizePoint = 6;
+    //    抽取400个点
+    NSUInteger sizePoint = 10;
     NSArray<YYRGBPixelNode *> *LTNodes = [self getSquareSidePoints:sizePoint
                                                     PointsWithRect:CGRectMake(0, 0, pWidth / 2.0, pHeight / 2.0)
                                                      InPixelBuffer:rgbPixelBuffer]; // 左上角
