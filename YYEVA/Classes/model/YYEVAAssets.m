@@ -80,26 +80,32 @@
             } else if (source.type == YYEVAEffectSourceTypeText) {
                 
                 NSDictionary *textDict = (NSDictionary *)content;
-                NSString *text = [textDict objectForKey:@"content"];
-                NSTextAlignment alignment = source.alignment;
-                //如果业务有传，使用业务的数据
-                if ([textDict objectForKey:@"align"] != nil) {
-                    alignment = [[textDict objectForKey:@"align"] integerValue];
+                NSAttributedString *attrText = [textDict objectForKey:@"attrText"];
+                if (attrText) {
+                    source.sourceImage = [YSVideoMetalUtils imageWithAttrText:attrText rectSize:CGSizeMake(source.width, source.height)];
+                } else {
+                    NSString *text = [textDict objectForKey:@"content"];
+                    NSTextAlignment alignment = source.alignment;
+                    //如果业务有传，使用业务的数据
+                    if ([textDict objectForKey:@"align"] != nil) {
+                        alignment = [[textDict objectForKey:@"align"] integerValue];
+                    }
+                    UIColor *color = [UIColor whiteColor];
+                    if (source.fontColor) {
+                        const char *cStr = [source.fontColor cStringUsingEncoding:NSASCIIStringEncoding];
+                        long x = strtol(cStr + 1, NULL, 16);
+                        float r = (float)((x >> 16) & 0x000000FF) / 255.0f;
+                        float g = (float)((x >> 8) & 0x000000FF) / 255.0f;
+                        float b = (float)(x & 0x000000FF) / 255.0f;
+                        color = [UIColor colorWithRed:r green:g blue:b alpha:1.0f];
+                    }
+                    float fontSize = source.fontSize;
+                    source.sourceImage = [YSVideoMetalUtils imageWithText:text
+                                                                textColor:color
+                                                                 fontSize:fontSize
+                                                                 rectSize:CGSizeMake(source.width, source.height)
+                                                                    align:alignment];
                 }
-                UIColor *color = [UIColor whiteColor];
-                if (source.fontColor) {
-                    const char *cStr = [source.fontColor cStringUsingEncoding:NSASCIIStringEncoding];
-                    long x = strtol(cStr + 1, NULL, 16);
-                    float r = (float)((x >> 16) & 0x000000FF) / 255.0f;
-                    float g = (float)((x >> 8) & 0x000000FF) / 255.0f;
-                    float b = (float)(x & 0x000000FF) / 255.0f;
-                    color = [UIColor colorWithRed:r green:g blue:b alpha:1.0f];
-                }
-                source.sourceImage = [YSVideoMetalUtils imageWithText:text
-                                                            textColor:color
-                                                             fontSize:source.fontSize
-                                                             rectSize:CGSizeMake(source.width, source.height)
-                                                                align:alignment];
             }
         }
     }];

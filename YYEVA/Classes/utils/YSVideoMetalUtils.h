@@ -25,6 +25,8 @@ extern "C" {
 
 @interface YSVideoMetalUtils : NSObject
 
++ (UIImage *)imageWithAttrText:(NSAttributedString *)attrText rectSize:(CGSize)rectSize;
+
 + (UIImage *)imageWithText:(NSString *)text
                      textColor:(UIColor *)textColor
                       fontSize:(float)fontSize

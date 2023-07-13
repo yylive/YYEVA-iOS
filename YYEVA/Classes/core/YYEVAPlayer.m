@@ -52,6 +52,12 @@
     [self.textKeys setObject:@{@"content":text} forKey:key];
 }
 
+- (void)setAttrText:(NSAttributedString *)attrText forKey:(NSString *)key
+{
+    if (attrText == nil) return;
+    [self.textKeys setObject:@{@"attrText": [attrText copy]} forKey:key];
+}
+
 - (void)setText:(NSString *)text forKey:(NSString *)key textAlign:(NSTextAlignment)textAlign
 {
     if (text.length <= 0) return;

@@ -14,6 +14,7 @@
 @property (nonatomic, strong) UIButton *pauseRenderBtn;
 @property (nonatomic, strong) UITextField *textField;
 @property (nonatomic, strong) NSString *showText;
+@property (nonatomic, strong) UITextField *attrTextField;
 @end
 
 @implementation YYEVAViewController
@@ -23,7 +24,7 @@
 {
     [super viewDidLoad];
     
-    UIView *toolBarView = [[UIView alloc] initWithFrame:CGRectMake(0, 64, self.view.bounds.size.width, 88)];
+    UIView *toolBarView = [[UIView alloc] initWithFrame:CGRectMake(0, 64, self.view.bounds.size.width, 140)];
     [self.view addSubview:toolBarView];
     
     UIButton *normalRenderBtn = [[UIButton alloc] initWithFrame:CGRectMake(10, 0, 100, 44)];
@@ -62,6 +63,15 @@
     textField.clearsOnBeginEditing = YES;
     [toolBarView addSubview:textField];
     self.textField = textField;
+    
+    {
+        UITextField *textField =  [[UITextField alloc] initWithFrame:CGRectMake(30, 54 + 40, 240, 30)];
+        textField.placeholder = @"输入富文本的文案";
+        textField.borderStyle = UITextBorderStyleBezel;
+        textField.clearsOnBeginEditing = YES;
+        [toolBarView addSubview:textField];
+        self.attrTextField = textField;
+    }
 }
 
 - (void)onClickPauseBtn
@@ -118,6 +128,8 @@
 
 - (void)onClickMaskRenderBtn
 {
+    [self.view endEditing:YES];
+
     NSString *file = [[NSBundle mainBundle] pathForResource:@"effect.mp4" ofType:nil];
     NSString *str = self.textField.text;
     
@@ -139,6 +151,21 @@
     //配置相关属性
     [player setImageUrl:png2 forKey:@"key"];
     [player setText:str.length ? str :@"可替换文案" forKey:@"keyname.png"];
+    if (self.attrTextField.text.length > 0) {
+        NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
+        paragraphStyle.alignment = NSTextAlignmentCenter;
+        paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
+        NSMutableAttributedString *attrText = [[NSMutableAttributedString alloc] initWithString:self.attrTextField.text.length > 0 ? self.attrTextField.text : @"富文本文案" attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:32 weight:UIFontWeightBold], NSForegroundColorAttributeName: [UIColor greenColor], NSBackgroundColorAttributeName: [UIColor blueColor], NSParagraphStyleAttributeName: paragraphStyle}];
+        
+        NSTextAttachment *attach = [NSTextAttachment new];
+        attach.bounds = CGRectMake(0, 0, 32, 32);
+        attach.image = [UIImage imageNamed:@"ball_1.png"];
+        NSAttributedString *attachString = [NSAttributedString attributedStringWithAttachment:attach];
+        [attrText appendAttributedString:attachString];
+        
+        [player setAttrText:attrText forKey:@"keyname.png"];
+    }
+
 //    player.regionMode = YYEVAColorRegion_AlphaMP4_LeftGrayRightColor; //指定色彩区域
     //开始播
     [player play:file];

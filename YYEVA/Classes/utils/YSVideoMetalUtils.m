@@ -183,7 +183,26 @@ void mask_textureCoordinateFromRect(CGRect rect,CGSize containerSize,float coord
 
 @implementation YSVideoMetalUtils
 
- 
++ (UIImage *)imageWithAttrText:(NSAttributedString *)attrText rectSize:(CGSize)rectSize
+{
+    CGRect rect = (CGRect){CGPointMake(0.0,0.0),rectSize};
+    __block UIFont *font = nil;
+    [attrText enumerateAttributesInRange:NSMakeRange(0, attrText.length) options:1 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+        if (attrs) {
+            font = [attrs valueForKey:NSFontAttributeName];
+            *stop = YES;
+        }
+    }];
+    UIGraphicsBeginImageContextWithOptions(rect.size, NO, [UIScreen mainScreen].scale);
+    rect.origin.y = (rect.size.height - font.lineHeight)/2.0;
+    [attrText drawWithRect:rect options:NSStringDrawingUsesLineFragmentOrigin context:nil];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    if (!image) {
+        return nil;
+    }
+    return image;
+}
 
 + (UIImage *)imageWithText:(NSString *)text
                      textColor:(UIColor *)textColor
