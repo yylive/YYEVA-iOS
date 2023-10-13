@@ -87,6 +87,11 @@ YYEVAPlayer *player = [[YYEVAPlayer alloc] init];
         <br>
         <a href="https://github.com/WickyLeung">WickyLeung</a>
       </td> 
+          <td align="center" valign="top">
+        <img style="border-radius:8px" width="80" height="80" src="https://avatars.githubusercontent.com/u/10579296?s=96&v=4">
+        <br>
+        <a href="https://github.com/ynot16">ChenChengming</a>
+      </td> 
      </tr>
   </tbody>
 </table>
