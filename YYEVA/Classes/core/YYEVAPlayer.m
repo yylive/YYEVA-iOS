@@ -11,6 +11,41 @@
 #import "YYEVAVideoAlphaRender.h"
 #import "YYEVAVideoEffectRender.h"
 
+@interface NSTimer (WeakTimer)
++ (NSTimer *)scheduledWeakTimerWithTimeInterval:(NSTimeInterval)interval target:(id)aTarget selector:(SEL)aSelector userInfo:(id)userInfo repeats:(BOOL)repeats;
+@end
+
+@interface TimerWeakObject : NSObject
+@property (nonatomic,weak) id target;
+@property (nonatomic,assign) SEL selector;
+@property (nonatomic,weak) NSTimer *timer;
+
+- (void)fire:(NSTimer *)timer;
+@end
+@implementation TimerWeakObject
+- (void)fire:(NSTimer *)timer {
+    if (self.target) {
+        if ([self.target respondsToSelector:self.selector]) {
+            #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            [self.target performSelector:self.selector withObject:timer.userInfo];
+        }
+    }else {
+        [self.timer invalidate];
+    }
+}
+
+@end
+@implementation NSTimer (WeakTimer)
++ (NSTimer *)scheduledWeakTimerWithTimeInterval:(NSTimeInterval)interval target:(id)aTarget selector:(SEL)aSelector userInfo:(id)userInfo repeats:(BOOL)repeats {
+    TimerWeakObject *object = [[TimerWeakObject alloc]init];
+    object.target = aTarget;
+    object.selector = aSelector;
+    object.timer = [NSTimer scheduledTimerWithTimeInterval:interval target:object selector:@selector(fire:) userInfo:userInfo repeats:repeats];
+    
+    return object.timer;
+}
+@end
+
 @import MetalKit;
 
 @interface YYEVAPlayer()
@@ -24,6 +59,7 @@
 @property (nonatomic, assign) UIViewContentMode bgContentMode;
 @property (nonatomic, assign) NSInteger repeatCount;
 @property (nonatomic, strong) NSTimer *timer;
+@property (nonatomic, assign) BOOL loop;
 @end
 
 @implementation YYEVAPlayer
@@ -121,6 +157,9 @@
 - (void)playWithFileUrl:(NSString *)url repeatCount:(NSInteger)repeatCount
 {
     self.repeatCount = repeatCount;
+    if (repeatCount == 0) {
+        self.loop = YES;
+    }
     YYEVAAssets *assets = [[YYEVAAssets alloc] initWithFilePath:url];
     assets.region = self.regionMode;
     assets.delegate = self;
@@ -144,14 +183,18 @@
     __weak typeof(self) weakSelf = self;
        
     self.videoRender.completionPlayBlock = ^{
-        [weakSelf timerEnd];
-        weakSelf.repeatCount--;
-        if (weakSelf.repeatCount > 0) {
-//            [weakSelf playWithFileUrl:url repeatCount:weakSelf.repeatCount];
+        if (weakSelf.loop) {
             [weakSelf.assets reload];
             [weakSelf timerStart];
         } else {
-            [weakSelf endPlay];
+            [weakSelf timerEnd];
+            weakSelf.repeatCount--;
+            if (weakSelf.repeatCount > 0) {
+                [weakSelf.assets reload];
+                [weakSelf timerStart];
+            } else {
+                [weakSelf endPlay];
+            }
         }
     };
    [self.videoRender playWithAssets:assets];
@@ -179,10 +222,7 @@
     [self timerEnd];
     NSTimeInterval per =  1.0 / self.assets.preferredFramesPerSecond;
    
-    self.timer = [NSTimer timerWithTimeInterval:per target:self selector:@selector(timerDraw) userInfo:nil repeats:YES];
-    [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
-    [self.timer fire];
-    
+    self.timer = [NSTimer scheduledWeakTimerWithTimeInterval:per target:self selector:@selector(timerDraw) userInfo:nil repeats:YES];
 }
 
 - (void)endPlay
