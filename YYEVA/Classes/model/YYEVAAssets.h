@@ -57,6 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)pauseAudio;
 - (void)resumeAudio;
 - (void)reload;
+- (void)setPlayerVolumn:(double)volumn;
 
 @end
 
