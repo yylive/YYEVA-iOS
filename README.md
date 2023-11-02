@@ -37,7 +37,11 @@ target 'MyApp' do
 end
 ```
 ### 使用SPM安装依赖
-+ TODO
+```
+dependencies: [
+    .package(url: "https://github.com/yylive/YYEVA-iOS.git", .upToNextMajor(from: "1.1.19"))
+]
+```
 
 ### 放置混合 mp4 文件 在bundle中
 
