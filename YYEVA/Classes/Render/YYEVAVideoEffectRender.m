@@ -91,10 +91,12 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 - (NSString *)metalFilePath
 {
     NSString *filePath =  [[NSBundle bundleForClass:[self class]] pathForResource:@"YYEVABundle.bundle/default" ofType:@"metallib"];
+#ifdef SWIFTPM_MODULE_BUNDLE
     if (filePath.length == 0) {
         NSBundle *swiftPMBundle = SWIFTPM_MODULE_BUNDLE;
         filePath = [swiftPMBundle pathForResource:@"default" ofType:@"metallib"];
     }
+#endif
     return filePath;
 }
 

@@ -91,10 +91,10 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 - (void)setupRenderPiplineState
 {
     NSString *filePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"YYEVABundle.bundle/default" ofType:@"metallib"];
-    if (filePath.length == 0) {
-        NSBundle *swiftPMBundle = SWIFTPM_MODULE_BUNDLE;
-        filePath = [swiftPMBundle pathForResource:@"default" ofType:@"metallib"];
-    }
+#ifdef SWIFTPM_MODULE_BUNDLE
+    NSBundle *swiftPMBundle = SWIFTPM_MODULE_BUNDLE;
+    filePath = [swiftPMBundle pathForResource:@"default" ofType:@"metallib"];
+#endif
     _library = [_device newLibraryWithFile:filePath error:nil];
     id<MTLFunction> vertexFunction = [_library newFunctionWithName:@"normalVertexShader"];
     id<MTLFunction> fragmentFunction1 = [_library newFunctionWithName:@"LCRGFragmentSharder"];
