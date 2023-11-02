@@ -36,6 +36,8 @@ target 'MyApp' do
   pod 'YYEVA' ,'1.0.1' 
 end
 ```
+### 使用SPM安装依赖
++ TODO
 
 ### 放置混合 mp4 文件 在bundle中
 
