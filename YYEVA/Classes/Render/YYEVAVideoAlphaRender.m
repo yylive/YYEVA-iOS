@@ -92,7 +92,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 {
     NSString *filePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"YYEVABundle.bundle/default" ofType:@"metallib"];
     if (filePath.length == 0) {
-        filePath = [SWIFTPM_MODULE_BUNDLE pathForResource:@"YYEVABundle.bundle/default" ofType:@"metallib"];
+        filePath = [SWIFTPM_MODULE_BUNDLE pathForResource:@"YYEVAPlayer_render" ofType:@"metallib"];
     }
     _library = [_device newLibraryWithFile:filePath error:nil];
     id<MTLFunction> vertexFunction = [_library newFunctionWithName:@"normalVertexShader"];
