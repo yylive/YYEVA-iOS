@@ -17,7 +17,8 @@ let package = Package(
         .target(
             name: "YYEVA",
             dependencies: [],
-            path: "YYEVA"
+            path: "YYEVA",
+            resources: [.copy("YYEVA/Classes/Render/YYEVAPlayer_render.metal")]
         ),
         .testTarget(
             name: "YYEVATests",
