@@ -6,6 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import <Metal/Metal.h>
 #import "YYEVACommon.h"
 NS_ASSUME_NONNULL_BEGIN

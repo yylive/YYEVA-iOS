@@ -1,0 +1,3 @@
+framework module YYEVA {
+    umbrella header "YYEVA.h"
+}
