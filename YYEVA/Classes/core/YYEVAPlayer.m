@@ -223,6 +223,11 @@
     NSTimeInterval per =  1.0 / self.assets.preferredFramesPerSecond;
    
     self.timer = [NSTimer scheduledWeakTimerWithTimeInterval:per target:self selector:@selector(timerDraw) userInfo:nil repeats:YES];
+    NSRunLoopMode mode = NSRunLoopCommonModes;
+    if (![self.assets existAudio] && self.runlLoopMode != nil) {
+        mode = self.runlLoopMode;
+    }
+    [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:mode];
 }
 
 - (void)endPlay

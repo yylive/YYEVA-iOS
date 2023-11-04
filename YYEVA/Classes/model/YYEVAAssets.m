@@ -383,5 +383,9 @@
     [self loadVideo];
 }
  
+- (BOOL)existAudio
+{
+    return self.audioPlayer != nil;
+}
  
 @end

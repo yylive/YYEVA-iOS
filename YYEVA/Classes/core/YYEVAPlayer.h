@@ -30,6 +30,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// 颜色区域
 @property (nonatomic, assign) YYEVAColorRegion regionMode;
 
+/// 当前渲染的runloop模式，仅无音频的视频可设置
+/// 默认是NSRunLoopCommonModes
+/// 无音频的视频可设置NSDefaultRunLoopMode，滑动时不渲染，优化性能。
+@property (nullable, copy) NSRunLoopMode runlLoopMode;
+
 //播放
 - (void)play:(NSString *)fileUrl;
 // 0表示一直循环播放
