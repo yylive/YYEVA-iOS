@@ -54,6 +54,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setBackgroundImage:(NSString *)imgUrl
                  scaleMode:(UIViewContentMode)contentMode;
 
+// 设置音量
+- (void)setVolumn:(double)volumn;
+
+
 @end
 
 NS_ASSUME_NONNULL_END

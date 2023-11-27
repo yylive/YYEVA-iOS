@@ -383,6 +383,11 @@
     [self loadVideo];
 }
  
+- (void)setPlayerVolumn:(double)volumn 
+{
+    [_audioPlayer setVolume:volumn];
+}
+    
 - (BOOL)existAudio
 {
     return self.audioPlayer != nil;

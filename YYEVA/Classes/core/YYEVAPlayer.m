@@ -60,6 +60,8 @@
 @property (nonatomic, assign) NSInteger repeatCount;
 @property (nonatomic, strong) NSTimer *timer;
 @property (nonatomic, assign) BOOL loop;
+/// 音量
+@property (nonatomic, assign) double volumn;
 @end
 
 @implementation YYEVAPlayer
@@ -131,9 +133,6 @@
         [self playWithFileUrl:fileUrl repeatCount:repeatCount];
     });
 }
-
-
-
  
 - (void)switchAssets:(YYEVAAssets *)assets
 {
@@ -148,6 +147,7 @@
         self.imgUrlKeys.count == 0 ?: [dict addEntriesFromDictionary:self.imgUrlKeys] ;
         assets.businessEffects = dict;
     }
+    [_assets setPlayerVolumn:_volumn];
     BOOL loadResult = [assets loadVideo];
     if (loadResult == NO) {
         [self endPlay];
@@ -311,7 +311,10 @@
     self.assets.region = regionMode;
 }
 
-
+- (void)setVolumn:(double)volumn{
+    _volumn = volumn;
+    [self.assets setPlayerVolumn:volumn];
+}
 
 #pragma mark - YYEVAAssetsDelegate
 
