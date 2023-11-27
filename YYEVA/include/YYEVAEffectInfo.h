@@ -1,0 +1,1 @@
+../Classes/model/YYEVAEffectInfo.h

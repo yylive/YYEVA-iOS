@@ -7,13 +7,13 @@
 
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
-#import "YYEVAEffectInfo.h"
 #import <AVFoundation/AVFoundation.h>
 #import "YYEVACommon.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class YYEVAAssets;
+@class YYEVAEffectInfo;
 @protocol YYEVAAssetsDelegate <NSObject>
 
 - (void)assetsDidStart:(YYEVAAssets *)asset;
@@ -58,6 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)resumeAudio;
 - (void)reload;
 - (void)setPlayerVolumn:(double)volumn;
+- (BOOL)existAudio;
 
 @end
 
