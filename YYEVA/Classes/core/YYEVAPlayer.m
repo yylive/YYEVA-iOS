@@ -71,6 +71,7 @@
         self.mode = YYEVAContentMode_ScaleAspectFit;
         self.regionMode = YYEVAColorRegion_NoSpecify;
         self.repeatCount = 1;
+        _volume = 1;
     }
     return self;
 } 

@@ -58,7 +58,6 @@
         //解析fileUrl
         _readVideoBufferQueue = dispatch_queue_create("com.yy.eva.ReadBufferQueue", DISPATCH_QUEUE_SERIAL);
         _sampleBufferQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
-        _volume = 1;
     }
     return self;
 }
