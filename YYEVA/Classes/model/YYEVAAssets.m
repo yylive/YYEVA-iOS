@@ -58,6 +58,7 @@
         //解析fileUrl
         _readVideoBufferQueue = dispatch_queue_create("com.yy.eva.ReadBufferQueue", DISPATCH_QUEUE_SERIAL);
         _sampleBufferQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+        _volume = 1;
     }
     return self;
 }
@@ -190,6 +191,7 @@
         _audioPlayer = nil;
     } else {
         self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:self.filePath] error:nil];
+        self.audioPlayer.volume = _volume;
     }
     
     NSDictionary *outputSettings = @{
@@ -386,6 +388,12 @@
 - (BOOL)existAudio
 {
     return self.audioPlayer != nil;
+}
+
+- (void)setVolume:(float)volume
+{
+    _volume = volume;
+    self.audioPlayer.volume = volume;
 }
  
 @end

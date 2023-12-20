@@ -35,6 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// 无音频的视频可设置NSDefaultRunLoopMode，滑动时不渲染，优化性能。
 @property (nullable, copy) NSRunLoopMode runlLoopMode;
 
+@property (nonatomic, assign) float volume;
+
 //播放
 - (void)play:(NSString *)fileUrl;
 // 0表示一直循环播放

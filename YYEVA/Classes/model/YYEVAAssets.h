@@ -39,7 +39,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL isEffectVideo; //是否是动态视频
 @property (nonatomic, strong) NSDictionary *businessEffects;
 @property (nonatomic, assign) YYEVAColorRegion region;
- 
+@property (nonatomic, assign) float volume;
+
 /**
  【本地普通视频】使用此初始化方法
  如果不是本地路径，返回nil

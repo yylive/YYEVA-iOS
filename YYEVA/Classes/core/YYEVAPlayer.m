@@ -148,6 +148,7 @@
         self.imgUrlKeys.count == 0 ?: [dict addEntriesFromDictionary:self.imgUrlKeys] ;
         assets.businessEffects = dict;
     }
+    _assets.volume = self.volume;
     BOOL loadResult = [assets loadVideo];
     if (loadResult == NO) {
         [self endPlay];
@@ -311,7 +312,11 @@
     self.assets.region = regionMode;
 }
 
-
+- (void)setVolume:(float)volume
+{
+    _volume = volume;
+    self.assets.volume = volume;
+}
 
 #pragma mark - YYEVAAssetsDelegate
 
