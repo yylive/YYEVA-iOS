@@ -3,6 +3,7 @@ use_frameworks!
 platform :ios, '9.0'
 
 target 'YYEVA_Example' do
-  pod 'YYEVA' , '1.1.23'
-#  pod 'YYEVA' ,:path=> '../'
+#  pod 'YYEVA' , '1.1.24'
+  pod 'Masonry'
+  pod 'YYEVA' ,:path=> '../'
 end

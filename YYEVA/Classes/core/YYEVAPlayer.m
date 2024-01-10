@@ -7,7 +7,6 @@
 
 #import "YYEVAPlayer.h"
 #import "IYYEVAVideoRenderProtol.h"
-#import "YYEVAAssets.h"
 #import "YYEVAVideoAlphaRender.h"
 #import "YYEVAVideoEffectRender.h"
 
@@ -50,7 +49,6 @@
 
 @interface YYEVAPlayer()
 @property (nonatomic, strong) MTKView *mtkView;
-@property (nonatomic, strong) YYEVAAssets *assets;
 @property (nonatomic, strong) id<IYYEVAVideoRenderProtol> videoRender;
 @property (nonatomic, copy)   NSString *fileUrl;
 @property (nonatomic, strong) NSMutableDictionary *imgUrlKeys;

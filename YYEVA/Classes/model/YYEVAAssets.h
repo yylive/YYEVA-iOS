@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface YYEVAAssets : NSObject
-@property (nonatomic, assign) id<YYEVAAssetsDelegate> delegate;
+@property (nonatomic, weak) id<YYEVAAssetsDelegate> delegate;
 /**
  唯一标识符，目前用于判断统计回调里的数据属于哪个数据源
  */

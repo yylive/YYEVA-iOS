@@ -8,7 +8,7 @@
 #import <Foundation/Foundation.h>
 #import "YYEVACommon.h"
 #import <UIKit/UIKit.h>
-
+#import "YYEVAAssets.h"
 
 NS_ASSUME_NONNULL_BEGIN
  
@@ -24,7 +24,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface YYEVAPlayer : UIView
 
-@property (nonatomic, assign) id<IYYEVAPlayerDelegate> delegate;
+@property (nonatomic, strong) YYEVAAssets *assets;
+
+@property (nonatomic, weak) id<IYYEVAPlayerDelegate> delegate;
 /// 视频拉伸模式
 @property (nonatomic, assign) YYEVAFillMode mode;
 /// 颜色区域
