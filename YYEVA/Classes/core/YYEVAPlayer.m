@@ -57,7 +57,6 @@
 @property (nonatomic, assign) UIViewContentMode bgContentMode;
 @property (nonatomic, assign) NSInteger repeatCount;
 @property (nonatomic, strong) NSTimer *timer;
-@property (nonatomic, assign) BOOL loop;
 @end
 
 @implementation YYEVAPlayer

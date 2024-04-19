@@ -39,6 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, assign) float volume;
 
+// true表示一直循环播放
+@property (nonatomic, assign) BOOL loop;
+
 //播放
 - (void)play:(NSString *)fileUrl;
 // 0表示一直循环播放

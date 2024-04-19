@@ -148,22 +148,20 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     switch (self.fillMode) {
         case YYEVAContentMode_ScaleAspectFit:
             if (widthScaling > heightScaling) {
-                hRatio = heightScaling;
+                hRatio = 1;
                 wRatio = insetRect.size.width * hRatio / drawableSize.width;
             } else {
-                wRatio = widthScaling;
+                wRatio = 1;
                 hRatio = insetRect.size.height * wRatio / drawableSize.height;
             }
-            
             break;
         case YYEVAContentMode_ScaleAspectFill:
-            
             if (widthScaling < heightScaling) {
-                hRatio = heightScaling;
-                wRatio = insetRect.size.width * hRatio / drawableSize.width;
+                hRatio = 1;
+                wRatio = insetRect.size.width * heightScaling / drawableSize.width;
             } else {
-                wRatio = widthScaling;
-                hRatio = insetRect.size.height * wRatio / drawableSize.height;
+                wRatio = 1;
+                hRatio = insetRect.size.height * widthScaling / drawableSize.height;
             }
             break;
         default:
