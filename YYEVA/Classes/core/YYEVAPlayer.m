@@ -231,9 +231,13 @@
 
 - (void)endPlay
 {
-    [self stopAnimation];
-    [self.imgUrlKeys removeAllObjects];
-    [self.textKeys removeAllObjects];
+    if (!self.setLastFrame) {
+        [self stopAnimation];
+        [self.imgUrlKeys removeAllObjects];
+        [self.textKeys removeAllObjects];
+    } else {
+        [self pause];
+    }
     if ([self.delegate respondsToSelector:@selector(evaPlayerDidCompleted:)]) {
         [self.delegate evaPlayerDidCompleted:self];
     }
