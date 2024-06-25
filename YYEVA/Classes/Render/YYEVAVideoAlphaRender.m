@@ -138,30 +138,35 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     CGSize drawableSize = self.mtkView.bounds.size;
     CGRect bounds = CGRectMake(0, 0, drawableSize.width, drawableSize.height);
     CGRect insetRect = AVMakeRectWithAspectRatioInsideRect(self.playAssets.rgbSize, bounds);
-    
-    widthScaling =   drawableSize.width / insetRect.size.width;
-    heightScaling =   drawableSize.height / insetRect.size.height;
+
+    widthScaling = drawableSize.width / insetRect.size.width;
+    heightScaling = drawableSize.height / insetRect.size.height;
     
     CGFloat wRatio = 1.0;
     CGFloat hRatio = 1.0;
+    CGFloat scale = self.playAssets.rgbSize.height / self.playAssets.rgbSize.width;
     
     switch (self.fillMode) {
         case YYEVAContentMode_ScaleAspectFit:
             if (widthScaling > heightScaling) {
                 hRatio = 1;
-                wRatio = insetRect.size.width * hRatio / drawableSize.width;
+                CGFloat width = drawableSize.height / scale;
+                wRatio = width / drawableSize.width;
             } else {
                 wRatio = 1;
-                hRatio = insetRect.size.height * wRatio / drawableSize.height;
+                CGFloat height = drawableSize.width * scale;
+                hRatio = height / drawableSize.height;
             }
             break;
         case YYEVAContentMode_ScaleAspectFill:
             if (widthScaling < heightScaling) {
                 hRatio = 1;
-                wRatio = insetRect.size.width * heightScaling / drawableSize.width;
+                CGFloat width = drawableSize.height / scale;
+                wRatio = width / drawableSize.width;
             } else {
                 wRatio = 1;
-                hRatio = insetRect.size.height * widthScaling / drawableSize.height;
+                CGFloat height = drawableSize.width * scale;
+                hRatio = height / drawableSize.height;
             }
             break;
         default:
@@ -177,6 +182,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     self->_imageVertices[5] = -hRatio;
     self->_imageVertices[6] = wRatio;
     self->_imageVertices[7] = hRatio;
+    NSLog(@"w %@, h %@", @(wRatio), @(hRatio));
 }
 
 
@@ -214,7 +220,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
                                                 options:MTLResourceStorageModeShared];
 }
 
-
+// 0.311307 - 0.186305
 #pragma mark -- MTKView Delegate
 //当MTKView size 改变则修改self.viewportSize
 - (void)mtkView:(MTKView *)view drawableSizeWillChange:(CGSize)size
@@ -227,6 +233,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 //视图绘制
 - (void)drawInMTKView:(MTKView *)view
 {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
     id<MTLCommandBuffer> commandBuffer = [self.commandQueue commandBuffer];
     MTLRenderPassDescriptor *renderPassDescriptor = view.currentRenderPassDescriptor;
     CMSampleBufferRef sampleBuffer = [self.playAssets nextSampleBuffer];
@@ -313,4 +320,5 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 }
  
 @end
+
 
