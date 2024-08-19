@@ -43,6 +43,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 @synthesize completionPlayBlock;
 @synthesize playAssets;
 @synthesize fillMode = _fillMode;
+@synthesize disalbleMetalCache = _disalbleMetalCache;
 
 - (instancetype)initWithMetalView:(MTKView *)mtkView
 {
@@ -76,7 +77,10 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 {
     self.playAssets = assets;
     [self setupVertex];
-    CVMetalTextureCacheCreate(NULL, NULL, self.mtkView.device, NULL, &_textureCache);
+    NSDictionary *cacheAttributes = @{
+        (id)kCVMetalTextureCacheMaximumTextureAgeKey: @(0.01),
+    };
+    CVMetalTextureCacheCreate(NULL, self.disalbleMetalCache ? (__bridge CFDictionaryRef)cacheAttributes : NULL, self.mtkView.device, NULL, &_textureCache);
 }
 
 - (void)setupRenderWithMetal:(MTKView *)mtkView

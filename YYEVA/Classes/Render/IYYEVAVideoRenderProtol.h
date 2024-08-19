@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, assign) YYEVAFillMode fillMode; 
  
+@property (nonatomic, assign) BOOL disalbleMetalCache;
+
 @end
 
 NS_ASSUME_NONNULL_END

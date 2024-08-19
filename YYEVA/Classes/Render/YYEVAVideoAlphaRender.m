@@ -34,6 +34,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 @synthesize completionPlayBlock;
 @synthesize playAssets;
 @synthesize fillMode = _fillMode;
+@synthesize disalbleMetalCache = _disalbleMetalCache;
 
 
 - (void)dealloc
@@ -74,7 +75,10 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     MTLRenderPipelineDescriptor *renderPipelineDescriptor = [self getRenderPipelineDescriptorWithVertexFunction:vertexFunction FragmentFunction:fragmentFunction];
     _renderPipelineState = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor error:nil];
     
-    CVMetalTextureCacheCreate(NULL, NULL, self.mtkView.device, NULL, &_textureCache);
+    NSDictionary *cacheAttributes = @{
+        (id)kCVMetalTextureCacheMaximumTextureAgeKey: @(0.01),
+    };
+    CVMetalTextureCacheCreate(NULL, self.disalbleMetalCache ? (__bridge CFDictionaryRef)cacheAttributes : NULL, self.mtkView.device, NULL, &_textureCache);
 }
 
 

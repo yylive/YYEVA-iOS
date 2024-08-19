@@ -172,6 +172,7 @@
         self.videoRender = [[YYEVAVideoAlphaRender alloc] initWithMetalView:self.mtkView];
     }
    self.videoRender.fillMode = self.mode;
+   self.videoRender.disalbleMetalCache = self.disalbleMetalCache;
    self.mtkView.delegate = self.videoRender;
    self.mtkView.frame = self.bounds;
    self.mtkView.backgroundColor = [UIColor clearColor];
