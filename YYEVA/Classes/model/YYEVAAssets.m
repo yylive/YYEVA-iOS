@@ -26,6 +26,7 @@
 @property (nonatomic, strong) YYEVADemuxMedia *demuxer;
 @property (nonatomic, strong) AVAudioPlayer *audioPlayer;
 @property (nonatomic, strong) YYEVARegionChecker *regionChecker;
+@property (nonatomic, assign) NSUInteger frameCount;
 @end
 
 @implementation YYEVAAssets
@@ -223,9 +224,12 @@
      
     _frameDuration = duration;
     _preferredFramesPerSecond = 1 / duration;
+    _frameCount = _videoDuration / _frameDuration;
     _frameIndex = -1;
     _reader = reader;
     _output = output;
+    
+    [self readVideoTracksIntoQueueIfNeed];
     
     return YES;
 }
@@ -234,6 +238,7 @@
 - (void)readVideoTracksIntoQueueIfNeed
 {
     if (self.reader.status != AVAssetReaderStatusReading) {
+        NSLog(@"reader status: %@, error: %@", @(self.reader.status), self.reader.error);
         return;
     }
     
@@ -284,8 +289,14 @@
                _frameIndex++;
                
                //第一帧读取代表开始
-               if (_frameIndex == 0 && [self.delegate respondsToSelector:@selector(assetsDidStart:)]){
-                   [self.delegate assetsDidStart:self];
+               if (_frameIndex == 0) {
+                   if ([self.delegate respondsToSelector:@selector(assetsDidStart:)]) {
+                       [self.delegate assetsDidStart:self];
+                   }
+               }
+               
+               if (self.delegate && [self.delegate respondsToSelector:@selector(assets:onPlayFrame:frameCount:)]) {
+                   [self.delegate assets:self onPlayFrame:_frameIndex frameCount:_frameCount];
                }
            }
        }

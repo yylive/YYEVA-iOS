@@ -47,7 +47,7 @@
 
 @import MetalKit;
 
-@interface YYEVAPlayer()
+@interface YYEVAPlayer()<YYEVAAssetsDelegate>
 @property (nonatomic, strong) MTKView *mtkView;
 @property (nonatomic, strong) id<IYYEVAVideoRenderProtol> videoRender;
 @property (nonatomic, copy)   NSString *fileUrl;
@@ -57,6 +57,7 @@
 @property (nonatomic, assign) UIViewContentMode bgContentMode;
 @property (nonatomic, assign) NSInteger repeatCount;
 @property (nonatomic, strong) NSTimer *timer;
+@property (nonatomic, assign) BOOL isFirstPlay;
 @end
 
 @implementation YYEVAPlayer
@@ -69,6 +70,7 @@
         self.regionMode = YYEVAColorRegion_NoSpecify;
         self.repeatCount = 1;
         _volume = 1;
+        _isFirstPlay = YES;
     }
     return self;
 } 
@@ -125,14 +127,15 @@
 
 - (void)play:(NSString *)fileUrl repeatCount:(NSInteger)repeatCount
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
+    if ([NSThread isMainThread]) {
         [self playWithFileUrl:fileUrl repeatCount:repeatCount];
-    });
+    } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self playWithFileUrl:fileUrl repeatCount:repeatCount];
+        });
+    }
 }
 
-
-
- 
 - (void)switchAssets:(YYEVAAssets *)assets
 {
     if (self.assets) {
@@ -153,13 +156,13 @@
     }
 }
 
-- (void)playWithFileUrl:(NSString *)url repeatCount:(NSInteger)repeatCount
+- (void)prepareToPlay:(NSString *)fileUrl repeatCount:(NSInteger)repeatCount
 {
     self.repeatCount = repeatCount;
     if (repeatCount == 0) {
         self.loop = YES;
     }
-    YYEVAAssets *assets = [[YYEVAAssets alloc] initWithFilePath:url];
+    YYEVAAssets *assets = [[YYEVAAssets alloc] initWithFilePath:fileUrl];
     assets.region = self.regionMode;
     assets.delegate = self;
     [self switchAssets:assets];
@@ -183,6 +186,7 @@
     __weak typeof(self) weakSelf = self;
        
     self.videoRender.completionPlayBlock = ^{
+        weakSelf.isFirstPlay = NO;
         if (weakSelf.loop) {
             [weakSelf.assets reload];
             [weakSelf timerStart];
@@ -199,9 +203,17 @@
     };
    [self.videoRender playWithAssets:assets];
    [self.assets tryPlayAudio];
-    
+}
+
+- (void)playWithFileUrl:(NSString *)url repeatCount:(NSInteger)repeatCount
+{
+    [self prepareToPlay:url repeatCount:repeatCount];
+    [self play];
+}
+
+- (void)play
+{
     [self timerStart];
-   
 }
  
 - (void)timerDraw
@@ -330,6 +342,10 @@
     if ([self.delegate respondsToSelector:@selector(evaPlayerDidStart:)]){
         [self.delegate evaPlayerDidStart:self];
     }
+    
+    if ([self.delegate respondsToSelector:@selector(evaPlayerDidStart:isRestart:)]) {
+        [self.delegate evaPlayerDidStart:self isRestart:!self.isFirstPlay];
+    }
 }
 - (void)assetsDidLoadFaild:(YYEVAAssets *)asset failure:(NSError *)error
 {
@@ -337,6 +353,13 @@
     
     if ([self.delegate respondsToSelector:@selector(evaPlayer:playFail:)]){
         [self.delegate evaPlayer:self playFail:error];
+    }
+}
+
+- (void)assets:(YYEVAAssets *)asset onPlayFrame:(NSInteger)frame frameCount:(NSInteger)frameCount
+{
+    if (self.delegate && [self.delegate respondsToSelector:@selector(evaPlayer:onPlayFrame:frameCount:)]) {
+        [self.delegate evaPlayer:self onPlayFrame:frame frameCount:frameCount];
     }
 }
 

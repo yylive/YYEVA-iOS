@@ -18,6 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)assetsDidStart:(YYEVAAssets *)asset;
 - (void)assetsDidLoadFaild:(YYEVAAssets *)asset failure:(NSError *)error;
+- (void)assets:(YYEVAAssets *)asset onPlayFrame:(NSInteger)frame frameCount:(NSInteger)frameCount;
 
 @end
 

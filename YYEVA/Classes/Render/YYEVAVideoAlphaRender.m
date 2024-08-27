@@ -237,7 +237,6 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 //视图绘制
 - (void)drawInMTKView:(MTKView *)view
 {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
     id<MTLCommandBuffer> commandBuffer = [self.commandQueue commandBuffer];
     MTLRenderPassDescriptor *renderPassDescriptor = view.currentRenderPassDescriptor;
     CMSampleBufferRef sampleBuffer = [self.playAssets nextSampleBuffer];

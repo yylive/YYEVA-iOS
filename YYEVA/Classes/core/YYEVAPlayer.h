@@ -16,15 +16,29 @@ NS_ASSUME_NONNULL_BEGIN
   
 //播放器的回调通知
 @protocol IYYEVAPlayerDelegate <NSObject>
+
 @optional
+
+// 每次开始播放都会回调，不区分首次非首次
 - (void)evaPlayerDidStart:(YYEVAPlayer *)player;
+
+// 每次开始播放都会回调，isRestart为NO代表首次播放，YES代表非首次播放
+- (void)evaPlayerDidStart:(YYEVAPlayer *)player isRestart:(BOOL)isRestart;
+
+// 播放结束
 - (void)evaPlayerDidCompleted:(YYEVAPlayer *)player;
+
+// 播放失败
 - (void)evaPlayer:(YYEVAPlayer *)player playFail:(NSError *)error;
+
+// frame：当前播放的帧数，frameCount：总帧数。尽量不要监听每一帧做耗时的操作，可能卡顿。
+- (void)evaPlayer:(YYEVAPlayer *)player onPlayFrame:(NSInteger)frame frameCount:(NSInteger)frameCount;
+
 @end
 
 @interface YYEVAPlayer : UIView
 
-@property (nonatomic, strong) YYEVAAssets *assets;
+@property (nonatomic, strong, nullable) YYEVAAssets *assets;
 
 @property (nonatomic, weak) id<IYYEVAPlayerDelegate> delegate;
 /// 视频拉伸模式
@@ -52,6 +66,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)play:(NSString *)fileUrl;
 // 0表示一直循环播放
 - (void)play:(NSString *)fileUrl repeatCount:(NSInteger)repeatCount;
+
+// 提前准备播放器
+- (void)prepareToPlay:(NSString *)fileUrl repeatCount:(NSInteger)repeatCount;
+- (void)play;
+
 - (void)pause;
 - (void)resume;
 - (void)stopAnimation;
