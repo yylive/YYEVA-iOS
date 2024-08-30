@@ -152,7 +152,7 @@
     _assets.volume = self.volume;
     BOOL loadResult = [assets loadVideo];
     if (loadResult == NO) {
-        [self endPlay];
+        [self endPlay:YES];
     }
 }
 
@@ -197,7 +197,7 @@
                 [weakSelf.assets reload];
                 [weakSelf timerStart];
             } else {
-                [weakSelf endPlay];
+                [weakSelf endPlay:NO];
             }
         }
     };
@@ -242,17 +242,18 @@
     [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:mode];
 }
 
-- (void)endPlay
+- (void)endPlay:(BOOL)force
 {
-    if (!self.setLastFrame) {
+    if (!self.setLastFrame || force) {
         [self stopAnimation];
         [self.imgUrlKeys removeAllObjects];
         [self.textKeys removeAllObjects];
+        
+        if ([self.delegate respondsToSelector:@selector(evaPlayerDidCompleted:)]) {
+            [self.delegate evaPlayerDidCompleted:self];
+        }
     } else {
         [self pause];
-    }
-    if ([self.delegate respondsToSelector:@selector(evaPlayerDidCompleted:)]) {
-        [self.delegate evaPlayerDidCompleted:self];
     }
 }
 
