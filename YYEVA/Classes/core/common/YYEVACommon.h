@@ -60,7 +60,8 @@ typedef enum : NSUInteger {
     YYEVAColorRegion_AlphaMP4_LeftColorRightGray, ///< 左彩色右透明
     YYEVAColorRegion_AlphaMP4_LeftGrayRightColor, ///< 左透明右彩色
     YYEVAColorRegion_AlphaMP4_TopColorBottomGray, ///< 上彩色下透明
-    YYEVAColorRegion_AlphaMP4_TopGrayBottomColor  ///< 上透明下彩色
+    YYEVAColorRegion_AlphaMP4_TopGrayBottomColor,  ///< 上透明下彩色
+    YYEVAColorRegion_AlphaMP4_alphaHalfRightTop      ///< alpha区域是rgb区域的一半，在右上角
 } YYEVAColorRegion;
 
 NS_ASSUME_NONNULL_END

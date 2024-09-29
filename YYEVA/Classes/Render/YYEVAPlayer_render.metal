@@ -69,6 +69,27 @@ LCRGFragmentSharder(VertexSharderOutput input [[stage_in]],
     //新增mask
     return float4(sourceRGB, alphaRGB.r);
 }
+
+fragment float4
+AHTRFragmentSharder(VertexSharderOutput input [[stage_in]],
+               texture2d<float> textureY [[ texture(YSVideoMetalFragmentTextureIndexTextureY) ]],
+               texture2d<float> textureUV [[ texture(YSVideoMetalFragmentTextureIndexTextureUV) ]],
+               constant YSVideoMetalConvertMatrix *convertMatrix [[ buffer(YSVideoMetalFragmentBufferIndexMatrix) ]])
+{
+    constexpr sampler textureSampler (mag_filter::linear,
+                                      min_filter::linear);
+    
+    float sourceX = input.textureCoordinate.x *2.0/3;
+    float alphaX =  input.textureCoordinate.x *1.0/3 + 2.0/3;
+    float y = input.textureCoordinate.y;
+    float alphaY = input.textureCoordinate.y * 0.5;
+    float2 sourceCoordinate = float2(sourceX,y);
+    float2 alphaCoordinate = float2(alphaX,alphaY);
+     
+    float3 sourceRGB = RGBColorFromYuvTextures(textureSampler, sourceCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    float3 alphaRGB = RGBColorFromYuvTextures(textureSampler, alphaCoordinate, textureY, textureUV, convertMatrix->matrix, convertMatrix->offset);
+    return float4(sourceRGB, alphaRGB.r);
+}
  
 fragment float4
 LGRCFragmentSharder(VertexSharderOutput input [[stage_in]],

@@ -70,6 +70,8 @@ extern vector_float3 kColorConversion601FullRangeOffset;
         fragmentFunction = [self.fragmentFunctionDict objectForKey:@"TCBGFragmentSharder"];
     } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_TopGrayBottomColor) {
         fragmentFunction = [self.fragmentFunctionDict objectForKey:@"TGBCFragmentSharder"];
+    } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_alphaHalfRightTop) {
+        fragmentFunction = [self.fragmentFunctionDict objectForKey:@"AHTRFragmentSharder"];
     }
     
     MTLRenderPipelineDescriptor *renderPipelineDescriptor = [self getRenderPipelineDescriptorWithVertexFunction:vertexFunction FragmentFunction:fragmentFunction];
@@ -105,12 +107,14 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     id<MTLFunction> fragmentFunction2 = [_library newFunctionWithName:@"LGRCFragmentSharder"];
     id<MTLFunction> fragmentFunction3 = [_library newFunctionWithName:@"TCBGFragmentSharder"];
     id<MTLFunction> fragmentFunction4 = [_library newFunctionWithName:@"TGBCFragmentSharder"];
+    id<MTLFunction> fragmentFunction5 = [_library newFunctionWithName:@"AHTRFragmentSharder"];
 
     [self.fragmentFunctionDict setObject:fragmentFunction1 forKey:@"LCRGFragmentSharder"];
     [self.fragmentFunctionDict setObject:fragmentFunction2 forKey:@"LGRCFragmentSharder"];
     [self.fragmentFunctionDict setObject:fragmentFunction3 forKey:@"TCBGFragmentSharder"];
     [self.fragmentFunctionDict setObject:fragmentFunction4 forKey:@"TGBCFragmentSharder"];
-    
+    [self.fragmentFunctionDict setObject:fragmentFunction5 forKey:@"AHTRFragmentSharder"];
+
     MTLRenderPipelineDescriptor *renderPipelineDescriptor = [self getRenderPipelineDescriptorWithVertexFunction:vertexFunction FragmentFunction:fragmentFunction1];
     _renderPipelineState = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor error:nil];
     
