@@ -301,6 +301,8 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 - (void)mtkView:(MTKView *)view drawableSizeWillChange:(CGSize)size
 {
     self.viewportSize = (vector_uint2){size.width, size.height};
+    
+    [self setupVertex];
 }
 
 //视图绘制
