@@ -202,7 +202,6 @@
         }
     };
    [self.videoRender playWithAssets:assets];
-   [self.assets tryPlayAudio];
 }
 
 - (void)playWithFileUrl:(NSString *)url repeatCount:(NSInteger)repeatCount
@@ -213,6 +212,7 @@
 
 - (void)play
 {
+    [self.assets tryPlayAudio];
     [self timerStart];
 }
  
