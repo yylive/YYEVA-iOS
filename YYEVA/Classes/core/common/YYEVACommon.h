@@ -29,7 +29,7 @@ typedef NS_ENUM(NSInteger,YYEVAEffectSourceImageFillMode) {
 /**
  播放器状态
  */
-typedef NS_ENUM(NSUInteger, YYEVAPlayerStatus) {
+typedef NS_ENUM(NSInteger, YYEVAPlayerStatus) {
     YYEVAPlayerStatus_Unknown = 0, // 未知，播放器未加载asset
     YYEVAPlayerStatus_Play = 1,
     YYEVAPlayerStatus_Stall = 2, // 卡顿
@@ -53,8 +53,8 @@ typedef NS_ENUM(NSInteger,YYEVAPlayerErrorCode){
 
 
 //MP4色彩区域
-typedef enum : NSUInteger {
-    YYEVAColorRegion_NoSpecify = -1,              ///< 默认没指定模式，将会自动检测
+typedef enum : NSInteger {
+    YYEVAColorRegion_NoSpecify = 999,              ///< 默认没指定模式，将会自动检测
     YYEVAColorRegion_Invaile = 0,                 ///< 检测失败
     YYEVAColorRegion_NormalMP4,                   ///< 普通MP4，没透明区域
     YYEVAColorRegion_AlphaMP4_LeftColorRightGray, ///< 左彩色右透明
