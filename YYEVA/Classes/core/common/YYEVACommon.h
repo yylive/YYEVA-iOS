@@ -53,7 +53,7 @@ typedef NS_ENUM(NSInteger,YYEVAPlayerErrorCode){
 
 
 //MP4色彩区域
-typedef enum : NSInteger {
+typedef NS_ENUM(NSInteger,YYEVAColorRegion) {
     YYEVAColorRegion_NoSpecify = 999,              ///< 默认没指定模式，将会自动检测
     YYEVAColorRegion_Invaile = 0,                 ///< 检测失败
     YYEVAColorRegion_NormalMP4,                   ///< 普通MP4，没透明区域
@@ -62,6 +62,6 @@ typedef enum : NSInteger {
     YYEVAColorRegion_AlphaMP4_TopColorBottomGray, ///< 上彩色下透明
     YYEVAColorRegion_AlphaMP4_TopGrayBottomColor,  ///< 上透明下彩色
     YYEVAColorRegion_AlphaMP4_alphaHalfRightTop      ///< alpha区域是rgb区域的一半，在右上角
-} YYEVAColorRegion;
+};
 
 NS_ASSUME_NONNULL_END
