@@ -17,7 +17,7 @@ matrix_float3x3 kColorConversion601FullRangeMatrix = (matrix_float3x3){
 vector_float3 kColorConversion601FullRangeOffset = (vector_float3){0.5, 0.5,1};
 
 //arr0[0...(size-1)] <- arr1[0...(size-1)]
-void replaceArrayElements(float arr0[], float arr1[], int size) {
+static void replaceArrayElements(float arr0[], float arr1[], int size) {
     
     if ((arr0 == NULL || arr1 == NULL) && size > 0) {
         assert(0);
