@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'YYEVA'
-  s.version          = '1.1.36'
+  s.version          = '1.1.37'
   s.summary      = "YYEVA 是一个能播放混合MP4的播放器"
   s.description  = <<-DESC
                    YYEVA 是一种在支持的静态MP4，动态插入元素的播放器解决方案，由 YY 团队主导开发；
