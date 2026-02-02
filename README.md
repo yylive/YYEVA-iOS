@@ -33,7 +33,7 @@
 
 ```js
 target 'MyApp' do 
-  pod 'YYEVA' ,'1.0.1' 
+  pod 'YYEVA'
 end
 ```
 ### 使用SPM安装依赖
