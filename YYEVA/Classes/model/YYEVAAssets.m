@@ -224,7 +224,7 @@
      
     _frameDuration = duration;
     _preferredFramesPerSecond = 1 / duration;
-    _frameCount = _videoDuration / _frameDuration;
+    _frameCount = ceil(_videoDuration / _frameDuration);
     _frameIndex = -1;
     _reader = reader;
     _output = output;
