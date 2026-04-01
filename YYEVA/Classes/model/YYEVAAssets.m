@@ -224,7 +224,7 @@
      
     _frameDuration = duration;
     _preferredFramesPerSecond = 1 / duration;
-    _frameCount = ceil(_videoDuration / _frameDuration);
+    _frameCount = CMTimeGetSeconds(asset.duration) * assetTrack.nominalFrameRate;
     _frameIndex = -1;
     _reader = reader;
     _output = output;
