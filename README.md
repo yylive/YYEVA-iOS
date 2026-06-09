@@ -68,6 +68,7 @@ YYEVAPlayer *player = [[YYEVAPlayer alloc] init];
 + setText:forKey
 
 YYEVAColorRegion 支持多种透明区域布局方式
+```c++ 
 typedef NS_ENUM(NSInteger,YYEVAColorRegion) {
     YYEVAColorRegion_NoSpecify = 999,              ///< 默认没指定模式，将会自动检测
     YYEVAColorRegion_Invaile = 0,                 ///< 检测失败
@@ -78,6 +79,7 @@ typedef NS_ENUM(NSInteger,YYEVAColorRegion) {
     YYEVAColorRegion_AlphaMP4_TopGrayBottomColor,  ///< 上透明下彩色
     YYEVAColorRegion_AlphaMP4_alphaHalfRightTop      ///< alpha区域是rgb区域的一半，在右上角
 };
+```
  
 ## QQ交流群
 ![qqgroup](https://github.com/yylive/YYEVA/blob/main/img/qqgroup.png)
