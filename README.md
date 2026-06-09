@@ -60,6 +60,18 @@ YYEVAPlayer *player = [[YYEVAPlayer alloc] init];
 [player setText:str.text forKey:@"text_key1"];
  
 [player play:file];
+
+YYEVAColorRegion 支持多种透明区域布局方式
+typedef NS_ENUM(NSInteger,YYEVAColorRegion) {
+    YYEVAColorRegion_NoSpecify = 999,              ///< 默认没指定模式，将会自动检测
+    YYEVAColorRegion_Invaile = 0,                 ///< 检测失败
+    YYEVAColorRegion_NormalMP4,                   ///< 普通MP4，没透明区域
+    YYEVAColorRegion_AlphaMP4_LeftColorRightGray, ///< 左彩色右透明
+    YYEVAColorRegion_AlphaMP4_LeftGrayRightColor, ///< 左透明右彩色
+    YYEVAColorRegion_AlphaMP4_TopColorBottomGray, ///< 上彩色下透明
+    YYEVAColorRegion_AlphaMP4_TopGrayBottomColor,  ///< 上透明下彩色
+    YYEVAColorRegion_AlphaMP4_alphaHalfRightTop      ///< alpha区域是rgb区域的一半，在右上角
+};
      
 ```
 
