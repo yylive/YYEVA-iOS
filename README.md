@@ -60,6 +60,12 @@ YYEVAPlayer *player = [[YYEVAPlayer alloc] init];
 [player setText:str.text forKey:@"text_key1"];
  
 [player play:file];
+     
+```
+
+其中以下接口是给MP4动态插入,业务文字或图片的接口
++ setImageUrl:forKey    
++ setText:forKey
 
 YYEVAColorRegion 支持多种透明区域布局方式
 typedef NS_ENUM(NSInteger,YYEVAColorRegion) {
@@ -72,12 +78,6 @@ typedef NS_ENUM(NSInteger,YYEVAColorRegion) {
     YYEVAColorRegion_AlphaMP4_TopGrayBottomColor,  ///< 上透明下彩色
     YYEVAColorRegion_AlphaMP4_alphaHalfRightTop      ///< alpha区域是rgb区域的一半，在右上角
 };
-     
-```
-
-其中以下接口是给MP4动态插入,业务文字或图片的接口
-+ setImageUrl:forKey    
-+ setText:forKey 
  
 ## QQ交流群
 ![qqgroup](https://github.com/yylive/YYEVA/blob/main/img/qqgroup.png)
