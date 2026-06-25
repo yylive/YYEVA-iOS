@@ -131,22 +131,29 @@
 - (BOOL)loadVideo
 {
     NSError *err;
-    
+
     if (!self.filePath || ![[NSFileManager defaultManager] fileExistsAtPath:self.filePath]) {
         [self playFail:FileNotExits];
         return NO;
     }
+
+    // 1. 先尝试解析YYEVA格式的配置 (从MP4元数据中)
     NSDictionary *dictionary = [self.demuxer demuxEffectJsonWithFilePath:self.filePath];
-    
+
+    // 2. 如果YYEVA格式解析失败，尝试解析VAP格式 (从vapc box中)
+    if (!dictionary) {
+        dictionary = [self.demuxer demuxVapConfigWithFilePath:self.filePath];
+    }
+
     YYEVAEffectInfo *effectInfo = [YYEVAEffectInfo effectInfoWithDictionary:dictionary];
     
     _effectInfo = effectInfo;
-    
+
     if (!effectInfo && self.region == YYEVAColorRegion_NoSpecify) {
         YYEVAColorRegion region = [self.regionChecker checkFile:self.filePath];
         _region = region;
     }
-    
+
     if (effectInfo && effectInfo.isEffect) {
         self.isEffectVideo = YES;
     } else {
@@ -386,7 +393,6 @@
         [weakself.audioPlayer prepareToPlay];
         [weakself.audioPlayer play];
     });
-    
 }
 
 - (void)reload

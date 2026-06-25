@@ -7,6 +7,7 @@
 
 #import "YYEVAVideoAlphaRender.h"
 #import "YYEVAAssets.h"
+#import "YYEVAEffectInfo.h"
 #include "YYEVAVideoShareTypes.h"
 #import "YSVideoMetalUtils.h"
 extern matrix_float3x3 kColorConversion601FullRangeMatrix;
@@ -59,24 +60,44 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 - (void)playWithAssets:(YYEVAAssets *)assets
 {
     self.playAssets = assets;
-    [self setupVertex];
 
-    id<MTLFunction> vertexFunction = [self.library newFunctionWithName:@"normalVertexShader"];
-    id<MTLFunction> fragmentFunction = [self.fragmentFunctionDict objectForKey:@"LCRGFragmentSharder"];
-    
-    if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_LeftGrayRightColor) {
-        fragmentFunction = [self.fragmentFunctionDict objectForKey:@"LGRCFragmentSharder"];
-    } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_TopColorBottomGray) {
-        fragmentFunction = [self.fragmentFunctionDict objectForKey:@"TCBGFragmentSharder"];
-    } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_TopGrayBottomColor) {
-        fragmentFunction = [self.fragmentFunctionDict objectForKey:@"TGBCFragmentSharder"];
-    } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_alphaHalfRightTop) {
-        fragmentFunction = [self.fragmentFunctionDict objectForKey:@"AHTRFragmentSharder"];
+    // 检测是否有有效的 effectInfo (rgbFrame 和 alphaFrame)
+    YYEVAEffectInfo *effectInfo = assets.effectInfo;
+    BOOL hasValidEffectInfo = effectInfo &&
+                             !CGRectIsEmpty(effectInfo.rgbFrame) &&
+                             !CGRectIsEmpty(effectInfo.alphaFrame);
+
+    id<MTLFunction> vertexFunction;
+    id<MTLFunction> fragmentFunction;
+
+    if (hasValidEffectInfo) {
+        // 使用通用 shader: maskVertexShader + maskFragmentSharder
+        // 通过 effectInfo.rgbFrame 和 alphaFrame 计算纹理坐标
+        vertexFunction = [self.library newFunctionWithName:@"maskVertexShader"];
+        fragmentFunction = [self.library newFunctionWithName:@"maskFragmentSharder"];
+
+        // 创建带 rgb/alpha 纹理坐标的顶点缓冲区
+        self.vertexBuffer = [self createMaskVertexBufferWithEffectInfo:effectInfo];
+    } else {
+        // 使用固定的 shader 模式
+        [self setupVertex];
+        vertexFunction = [self.library newFunctionWithName:@"normalVertexShader"];
+        fragmentFunction = [self.fragmentFunctionDict objectForKey:@"LCRGFragmentSharder"];
+
+        if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_LeftGrayRightColor) {
+            fragmentFunction = [self.fragmentFunctionDict objectForKey:@"LGRCFragmentSharder"];
+        } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_TopColorBottomGray) {
+            fragmentFunction = [self.fragmentFunctionDict objectForKey:@"TCBGFragmentSharder"];
+        } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_TopGrayBottomColor) {
+            fragmentFunction = [self.fragmentFunctionDict objectForKey:@"TGBCFragmentSharder"];
+        } else if (self.playAssets.region == YYEVAColorRegion_AlphaMP4_alphaHalfRightTop) {
+            fragmentFunction = [self.fragmentFunctionDict objectForKey:@"AHTRFragmentSharder"];
+        }
     }
-    
+
     MTLRenderPipelineDescriptor *renderPipelineDescriptor = [self getRenderPipelineDescriptorWithVertexFunction:vertexFunction FragmentFunction:fragmentFunction];
     _renderPipelineState = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor error:nil];
-    
+
     NSDictionary *cacheAttributes = @{
         (id)kCVMetalTextureCacheMaximumTextureAgeKey: @(0.01),
     };
@@ -325,7 +346,54 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     }
     return _fragmentFunctionDict;
 }
- 
+
+// 使用 effectInfo.rgbFrame 和 alphaFrame 创建通用顶点缓冲区
+- (id<MTLBuffer>)createMaskVertexBufferWithEffectInfo:(YYEVAEffectInfo *)effectInfo
+{
+    if (!effectInfo) {
+        return nil;
+    }
+
+    // 1. 计算显示区域顶点
+    [self recalculateViewGeometry];
+    float vertices[16] = {
+        self->_imageVertices[0], self->_imageVertices[1], 0.0, 1.0,
+        self->_imageVertices[2], self->_imageVertices[3], 0.0, 1.0,
+        self->_imageVertices[4], self->_imageVertices[5], 0.0, 1.0,
+        self->_imageVertices[6], self->_imageVertices[7], 0.0, 1.0,
+    };
+
+    // 2. 从 rgbFrame 和 alphaFrame 计算纹理坐标
+    float rgbCoordinates[8], alphaCoordinates[8];
+    CGSize videoSize = CGSizeMake(effectInfo.videoWidth, effectInfo.videoHeight);
+
+    // 使用 textureCoordinateFromRect 计算 rgb 纹理坐标
+    textureCoordinateFromRect(effectInfo.rgbFrame, videoSize, rgbCoordinates);
+    // 使用 mask_textureCoordinateFromRect 计算 alpha 纹理坐标
+    textureCoordinateFromRect(effectInfo.alphaFrame, videoSize, alphaCoordinates);
+
+    // 3. 组装 YSVideoMetalMaskVertex
+    YSVideoMetalMaskVertex metalVertices[4];
+    for (int i = 0; i < 4; i++) {
+        metalVertices[i].positon.x = vertices[i * 4];
+        metalVertices[i].positon.y = vertices[i * 4 + 1];
+        metalVertices[i].positon.z = vertices[i * 4 + 2];
+        metalVertices[i].positon.w = vertices[i * 4 + 3];
+
+        metalVertices[i].rgbTexturCoordinate.x = rgbCoordinates[i * 2];
+        metalVertices[i].rgbTexturCoordinate.y = rgbCoordinates[i * 2 + 1];
+
+        metalVertices[i].alphaTexturCoordinate.x = alphaCoordinates[i * 2];
+        metalVertices[i].alphaTexturCoordinate.y = alphaCoordinates[i * 2 + 1];
+    }
+
+    self.numVertices = 4;
+
+    return [self.device newBufferWithBytes:metalVertices
+                                    length:sizeof(metalVertices)
+                                   options:MTLResourceStorageModeShared];
+}
+
 @end
 
 

@@ -57,12 +57,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)effectInfoWithDictionary:(NSDictionary *)dict;
 
-@property (nonatomic, assign,readonly) float videoWidth;
-@property (nonatomic, assign,readonly) float videoHeight;
+@property (nonatomic, assign) float videoWidth;
+@property (nonatomic, assign) float videoHeight;
 @property (nonatomic, assign,readonly) BOOL isEffect;
 @property (nonatomic, copy,  readonly) NSString *plugin_version;
-@property (nonatomic, assign,readonly) CGRect rgbFrame;
-@property (nonatomic, assign,readonly) CGRect alphaFrame;
+@property (nonatomic, assign) CGRect rgbFrame;
+@property (nonatomic, assign) CGRect alphaFrame;
 
 @property (nonatomic, strong) NSArray<YYEVAEffectSource *> *srcs;
 @property (nonatomic, strong) NSDictionary <NSNumber *,YYEVAEffectSource *> *mapForSource;
