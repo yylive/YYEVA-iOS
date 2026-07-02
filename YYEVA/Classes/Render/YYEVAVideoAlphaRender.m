@@ -16,6 +16,7 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 @interface YYEVAVideoAlphaRender()
 {
     float _imageVertices[8];
+    BOOL _useMaskVertex; // 是否使用通用mask顶点(rgbFrame/alphaFrame分支)，决定setupVertex构建的顶点格式
 }
 @property (nonatomic, weak) MTKView *mtkView;
 @property (nonatomic, strong) id<MTLDevice> device;
@@ -73,13 +74,13 @@ extern vector_float3 kColorConversion601FullRangeOffset;
     if (hasValidEffectInfo) {
         // 使用通用 shader: maskVertexShader + maskFragmentSharder
         // 通过 effectInfo.rgbFrame 和 alphaFrame 计算纹理坐标
+        _useMaskVertex = YES;
+        [self setupVertex];
         vertexFunction = [self.library newFunctionWithName:@"maskVertexShader"];
         fragmentFunction = [self.library newFunctionWithName:@"maskFragmentSharder"];
-
-        // 创建带 rgb/alpha 纹理坐标的顶点缓冲区
-        self.vertexBuffer = [self createMaskVertexBufferWithEffectInfo:effectInfo];
     } else {
         // 使用固定的 shader 模式
+        _useMaskVertex = NO;
         [self setupVertex];
         vertexFunction = [self.library newFunctionWithName:@"normalVertexShader"];
         fragmentFunction = [self.fragmentFunctionDict objectForKey:@"LCRGFragmentSharder"];
@@ -218,24 +219,68 @@ extern vector_float3 kColorConversion601FullRangeOffset;
 
 // 设置顶点
 - (void)setupVertex {
-      
-    [self recalculateViewGeometry];
-    
-    YSVideoMetalVertex quadVertices[] =
-    {   // 顶点坐标，分别是x、y、z；    纹理坐标，x、y；
-        { { self->_imageVertices[0], self->_imageVertices[1], 0.0 ,1.0},  { 0.f, 1.f} },
-        { { self->_imageVertices[2],  self->_imageVertices[3], 0.0 ,1.0},  { 0.f, 0.0f } },
-        { { self->_imageVertices[4], self->_imageVertices[5], 0.0,1.0 },  { 1.f, 1.f } },
-        { { self->_imageVertices[6], self->_imageVertices[7], 0.0,1.0 },  { 1.f, 0.f } }
 
-    };
-    
-    //2.创建顶点缓存区
-    self.vertexBuffer = [self.mtkView.device newBufferWithBytes:quadVertices
-                                                     length:sizeof(quadVertices)
-                                                    options:MTLResourceStorageModeShared];
-    //3.计算顶点个数
-    self.numVertices = sizeof(quadVertices) / sizeof(YSVideoMetalVertex);
+    [self recalculateViewGeometry];
+
+    if (_useMaskVertex) {
+        // 通用分支：使用 effectInfo.rgbFrame/alphaFrame 计算纹理坐标，构建 YSVideoMetalMaskVertex
+        // 与 maskVertexShader 匹配（双纹理坐标 rgb/alpha）
+        YYEVAEffectInfo *effectInfo = self.playAssets.effectInfo;
+        if (!effectInfo) {
+            _useMaskVertex = NO;
+            [self setupVertex];
+            return;
+        }
+
+        float vertices[16] = {
+            self->_imageVertices[0], self->_imageVertices[1], 0.0, 1.0,
+            self->_imageVertices[2], self->_imageVertices[3], 0.0, 1.0,
+            self->_imageVertices[4], self->_imageVertices[5], 0.0, 1.0,
+            self->_imageVertices[6], self->_imageVertices[7], 0.0, 1.0,
+        };
+
+        float rgbCoordinates[8], alphaCoordinates[8];
+        CGSize videoSize = CGSizeMake(effectInfo.videoWidth, effectInfo.videoHeight);
+        // rgb 纹理坐标
+        textureCoordinateFromRect(effectInfo.rgbFrame, videoSize, rgbCoordinates);
+        // alpha 纹理坐标（与 YYEVAVideoEffectRender 一致，均使用 textureCoordinateFromRect）
+        textureCoordinateFromRect(effectInfo.alphaFrame, videoSize, alphaCoordinates);
+
+        YSVideoMetalMaskVertex metalVertices[4];
+        for (int i = 0; i < 4; i++) {
+            metalVertices[i].positon.x = vertices[i * 4];
+            metalVertices[i].positon.y = vertices[i * 4 + 1];
+            metalVertices[i].positon.z = vertices[i * 4 + 2];
+            metalVertices[i].positon.w = vertices[i * 4 + 3];
+
+            metalVertices[i].rgbTexturCoordinate.x = rgbCoordinates[i * 2];
+            metalVertices[i].rgbTexturCoordinate.y = rgbCoordinates[i * 2 + 1];
+
+            metalVertices[i].alphaTexturCoordinate.x = alphaCoordinates[i * 2];
+            metalVertices[i].alphaTexturCoordinate.y = alphaCoordinates[i * 2 + 1];
+        }
+
+        self.vertexBuffer = [self.mtkView.device newBufferWithBytes:metalVertices
+                                                              length:sizeof(metalVertices)
+                                                             options:MTLResourceStorageModeShared];
+        self.numVertices = sizeof(metalVertices) / sizeof(YSVideoMetalMaskVertex);
+    } else {
+        // 固定 shader 分支：构建 YSVideoMetalVertex（单纹理坐标），与 normalVertexShader 匹配
+        YSVideoMetalVertex quadVertices[] =
+        {   // 顶点坐标，分别是x、y、z；    纹理坐标，x、y；
+            { { self->_imageVertices[0], self->_imageVertices[1], 0.0 ,1.0},  { 0.f, 1.f} },
+            { { self->_imageVertices[2],  self->_imageVertices[3], 0.0 ,1.0},  { 0.f, 0.0f } },
+            { { self->_imageVertices[4], self->_imageVertices[5], 0.0,1.0 },  { 1.f, 1.f } },
+            { { self->_imageVertices[6], self->_imageVertices[7], 0.0,1.0 },  { 1.f, 0.f } }
+        };
+
+        //2.创建顶点缓存区
+        self.vertexBuffer = [self.mtkView.device newBufferWithBytes:quadVertices
+                                                             length:sizeof(quadVertices)
+                                                            options:MTLResourceStorageModeShared];
+        //3.计算顶点个数
+        self.numVertices = sizeof(quadVertices) / sizeof(YSVideoMetalVertex);
+    }
 }
 - (void)setupFragment
 {
@@ -345,53 +390,6 @@ extern vector_float3 kColorConversion601FullRangeOffset;
         _fragmentFunctionDict = @{}.mutableCopy;
     }
     return _fragmentFunctionDict;
-}
-
-// 使用 effectInfo.rgbFrame 和 alphaFrame 创建通用顶点缓冲区
-- (id<MTLBuffer>)createMaskVertexBufferWithEffectInfo:(YYEVAEffectInfo *)effectInfo
-{
-    if (!effectInfo) {
-        return nil;
-    }
-
-    // 1. 计算显示区域顶点
-    [self recalculateViewGeometry];
-    float vertices[16] = {
-        self->_imageVertices[0], self->_imageVertices[1], 0.0, 1.0,
-        self->_imageVertices[2], self->_imageVertices[3], 0.0, 1.0,
-        self->_imageVertices[4], self->_imageVertices[5], 0.0, 1.0,
-        self->_imageVertices[6], self->_imageVertices[7], 0.0, 1.0,
-    };
-
-    // 2. 从 rgbFrame 和 alphaFrame 计算纹理坐标
-    float rgbCoordinates[8], alphaCoordinates[8];
-    CGSize videoSize = CGSizeMake(effectInfo.videoWidth, effectInfo.videoHeight);
-
-    // 使用 textureCoordinateFromRect 计算 rgb 纹理坐标
-    textureCoordinateFromRect(effectInfo.rgbFrame, videoSize, rgbCoordinates);
-    // 使用 mask_textureCoordinateFromRect 计算 alpha 纹理坐标
-    textureCoordinateFromRect(effectInfo.alphaFrame, videoSize, alphaCoordinates);
-
-    // 3. 组装 YSVideoMetalMaskVertex
-    YSVideoMetalMaskVertex metalVertices[4];
-    for (int i = 0; i < 4; i++) {
-        metalVertices[i].positon.x = vertices[i * 4];
-        metalVertices[i].positon.y = vertices[i * 4 + 1];
-        metalVertices[i].positon.z = vertices[i * 4 + 2];
-        metalVertices[i].positon.w = vertices[i * 4 + 3];
-
-        metalVertices[i].rgbTexturCoordinate.x = rgbCoordinates[i * 2];
-        metalVertices[i].rgbTexturCoordinate.y = rgbCoordinates[i * 2 + 1];
-
-        metalVertices[i].alphaTexturCoordinate.x = alphaCoordinates[i * 2];
-        metalVertices[i].alphaTexturCoordinate.y = alphaCoordinates[i * 2 + 1];
-    }
-
-    self.numVertices = 4;
-
-    return [self.device newBufferWithBytes:metalVertices
-                                    length:sizeof(metalVertices)
-                                   options:MTLResourceStorageModeShared];
 }
 
 @end
