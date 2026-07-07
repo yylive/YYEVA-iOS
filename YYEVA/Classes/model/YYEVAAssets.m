@@ -210,15 +210,20 @@
     [reader addOutput:output];
     [reader startReading];
      
-    NSTimeInterval duration = CMTimeGetSeconds(assetTrack.minFrameDuration);
-     
-    
-    CMTime videoTotalTime = [asset duration];
-    if (videoTotalTime.timescale) {
-        _videoDuration = videoTotalTime.value / (videoTotalTime.timescale * 1.0f);
-    } else {
-        _videoDuration = 0.0f;
+    NSTimeInterval minFrameDuration = CMTimeGetSeconds(assetTrack.minFrameDuration);
+    NSTimeInterval duraion = CMTimeGetSeconds(asset.duration);
+    float nominalFrameRate = assetTrack.nominalFrameRate;
+    if (minFrameDuration == 0) {
+        minFrameDuration = 1 / nominalFrameRate;
     }
+
+    _videoDuration = duraion;
+    _frameDuration = minFrameDuration;
+    _preferredFramesPerSecond = 1 / minFrameDuration;
+    _frameCount = duraion * nominalFrameRate;
+    _frameIndex = -1;
+    _reader = reader;
+    _output = output;
     
     if (CGSizeEqualToSize(self.rgbSize, CGSizeZero)) {
         self.rgbSize = CGSizeMake(assetTrack.naturalSize.width / 2, assetTrack.naturalSize.height);
@@ -228,13 +233,6 @@
             self.rgbSize = CGSizeMake(assetTrack.naturalSize.width, assetTrack.naturalSize.height/2);
         }
     }
-     
-    _frameDuration = duration;
-    _preferredFramesPerSecond = 1 / duration;
-    _frameCount = CMTimeGetSeconds(asset.duration) * assetTrack.nominalFrameRate;
-    _frameIndex = -1;
-    _reader = reader;
-    _output = output;
     
     [self readVideoTracksIntoQueueIfNeed];
     
