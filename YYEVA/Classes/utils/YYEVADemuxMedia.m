@@ -126,6 +126,11 @@
                     NSLog(@"VAP config parse error: %@", jsonError);
                     return nil;
                 }
+                
+                if (![configDic isKindOfClass:[NSDictionary class]]) {
+                    return nil;
+                }
+                
                 // 转换为YYEVA格式
                 return [self convertVapConfigToYYEVAFormat:configDic];
             }
